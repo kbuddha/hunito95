@@ -1126,7 +1126,7 @@ function quizChips(s){const ids=Object.keys(QZ).filter(id=>QZ[id].day===s);if(!i
 function reroute(){if(/^#quiz\/./.test(location.hash)&&$('qPlay').hidden)route();}
 function onQuizSnap(snap,first){
   const seen=new Set();
-  snap.docs.forEach(doc=>{const v=doc.data();if(doc.id==='_meta'){if(v&&v.hidden)Object.assign(QHID,v.hidden);return;}if(!v||!Array.isArray(v.items))return;seen.add(doc.id);const cur=QZ[doc.id];
+  snap.docs.forEach(doc=>{const raw=doc.data();const v=raw?JSON.parse(JSON.stringify(raw)):raw; /* 동기화 데이터는 읽기 전용이라 복사해서 씀 */if(doc.id==='_meta'){if(v&&v.hidden)Object.assign(QHID,v.hidden);return;}if(!v||!Array.isArray(v.items))return;seen.add(doc.id);const cur=QZ[doc.id];
     if(!cur||(v.updated||0)>=(cur.updated||0)){
       if(!v.res)v.res={};if(v.att==null)v.att=0;if(!v.hist)v.hist=[];
       // Claude가 db에 바로 쓴 세트(정답 a가 1부터)도 받기
@@ -1202,7 +1202,7 @@ renderBk();
     db.collection('desk').onSnapshot(snap=>{
       const localOnly={...DAYS};
       snap.docs.forEach(doc=>{
-        const v=doc.data(); if(!v)return;
+        const raw=doc.data(); if(!raw)return; const v=JSON.parse(JSON.stringify(raw));
         if(doc.id.indexOf('backup-')===0){BACKUPS[doc.id]=v;return;}
         if(doc.id==='progress'){ if(!PROG.updated||(v.updated||0)>=(PROG.updated||0)){PROG={cells:Object.assign({},v.cells||{}),concept:v.concept||0,updated:v.updated||0};} return; }
         if(v.date){ const cur=DAYS[v.date]; delete localOnly[v.date];
