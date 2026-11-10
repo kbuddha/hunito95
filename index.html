@@ -936,7 +936,13 @@ const SUBJ={mix:['pil','아침 복습'],hanja:['han','한자'],bio:['bio','생�
 const LSQ='sung-desk-quiz';
 let QZ={}; const QPEND=new Set();
 try{QZ=JSON.parse(localStorage.getItem(LSQ)||'{}')||{};}catch(e){QZ={};}
-function lsQ(){try{localStorage.setItem(LSQ,JSON.stringify(QZ))}catch(e){}}
+const untouched=q=>q&&q._b&&!Object.keys(q.res||{}).length&&!Object.keys(q.blankMiss||{}).length&&!(q.hist||[]).length;
+function lsQ(){try{const o={};Object.keys(QZ).forEach(id=>{if(!untouched(QZ[id]))o[id]=QZ[id];});localStorage.setItem(LSQ,JSON.stringify(o));localStorage.setItem(LSQ+'-hidden',JSON.stringify(QHID));}catch(e){}}
+/* 지난 복습문제 묶음 (past-review.json, 페이지와 함께 배포) — 풀기 시작한 세트만 db에 저장 */
+let QHID={};try{QHID=JSON.parse(localStorage.getItem(LSQ+'-hidden')||'{}')||{};}catch(e){}
+let BUNDLE=null;
+function applyBundle(){if(!BUNDLE)return;BUNDLE.forEach(o=>{if(QHID[o.id]||QZ[o.id])return;try{const n=normSet(o);n._b=1;n.created=0;QZ[o.id]=n;}catch(e){}});}
+fetch('past-review.json').then(r=>r.ok?r.json():null).then(a=>{if(Array.isArray(a)){BUNDLE=a;applyBundle();renderQuizList();renderDay();reroute();}}).catch(()=>{});
 const CIRC='①②③④⑤⑥⑦⑧⑨⑩';
 function qSave(id){const q=QZ[id];if(!q)return Promise.resolve();q.updated=Date.now();lsQ();QPEND.add(id);return write('quiz/'+id,q).finally(()=>QPEND.delete(id));}
 function normSet(o){
@@ -1075,7 +1081,7 @@ $('qBlank').addEventListener('click',e=>{const b=e.target.closest('[data-b]');if
 $('qCopy').onclick=()=>copy(resultText());
 $('qToMemo').onclick=()=>{const d=day(TODAY);const line=resultText().replace(/\n/g,' · ');d.wrong=(d.wrong||'').trim()?d.wrong.trim()+' / '+line:line;saveDay(TODAY);if(SEL===TODAY)renderDay();renderNotes();toast('오늘 정리 \'틀린 번호\'에 넣었어요');};
 $('qDel').onclick=()=>{const b=$('qDel');if(!b.dataset.arm){b.dataset.arm='1';b.textContent='한 번 더 누르면 지워요';setTimeout(()=>{delete b.dataset.arm;b.textContent='세트 지우기';},4000);return;}
-  delete b.dataset.arm;b.textContent='세트 지우기';const id=CUR.sid;delete QZ[id];lsQ();if(DB)DB.doc('quiz/'+id).delete().catch(e=>setSync('err',errMsg(e)));location.hash='#quiz';renderQuizList();toast('지웠어요');};
+  delete b.dataset.arm;b.textContent='세트 지우기';const id=CUR.sid;const wasB=QZ[id]&&QZ[id]._b;delete QZ[id];if(wasB){QHID[id]=true;if(DB)DB.doc('quiz/_meta').set({hidden:QHID}).catch(()=>{});}lsQ();if(DB)DB.doc('quiz/'+id).delete().catch(e=>setSync('err',errMsg(e)));location.hash='#quiz';renderQuizList();toast('지웠어요');};
 $('qWrongBtn').onclick=()=>{location.hash='#quiz/~wrong';};
 $('qAdd').onclick=()=>{
   let arr;try{arr=parseInput($('qIn').value);}catch(e){$('qMsg').textContent='JSON을 읽지 못했어요 — 채팅에서 받은 코드블록을 통째로 붙여 넣어 주세요.';return;}
@@ -1100,17 +1106,19 @@ function openQuiz(arg){
 }
 function quizChips(s){const ids=Object.keys(QZ).filter(id=>QZ[id].day===s);if(!ids.length)return '';
   return '<div class="banner qban">📝 이 날 풀 문제 '+ids.map(id=>{const st=qStats(QZ[id]);return '<a class="chip" href="#quiz/'+encodeURIComponent(id)+'">'+esc(QZ[id].title)+' · '+(st.ans?st.ok+'/'+st.tot:'안 풂')+' →</a>';}).join(' ')+'</div><div style="height:8px"></div>';}
+function reroute(){if(/^#quiz\/./.test(location.hash)&&$('qPlay').hidden)route();}
 function onQuizSnap(snap,first){
   const seen=new Set();
-  snap.docs.forEach(doc=>{const v=doc.data();if(!v||!Array.isArray(v.items))return;seen.add(doc.id);const cur=QZ[doc.id];
+  snap.docs.forEach(doc=>{const v=doc.data();if(doc.id==='_meta'){if(v&&v.hidden)Object.assign(QHID,v.hidden);return;}if(!v||!Array.isArray(v.items))return;seen.add(doc.id);const cur=QZ[doc.id];
     if(!cur||(v.updated||0)>=(cur.updated||0)){
       if(!v.res)v.res={};if(v.att==null)v.att=0;if(!v.hist)v.hist=[];
       // Claude가 db에 바로 쓴 세트(정답 a가 1부터)도 받기
       if(v.items.some(it=>it.ai===undefined)){try{const n=normSet(v);v.items=n.items;if(!v.day)v.day=n.day;if(!SUBJ[v.subj])v.subj='etc';}catch(e){return;}}
       QZ[doc.id]=v;}
   });
-  Object.keys(QZ).forEach(id=>{if(!seen.has(id)&&!QPEND.has(id)){if(first)qSave(id);else delete QZ[id];}});
-  lsQ();renderQuizList();renderDay();if(CUR&&!$('qPlay').hidden)renderPlay();
+  Object.keys(QZ).forEach(id=>{if(!seen.has(id)&&!QPEND.has(id)){if(untouched(QZ[id]))return;if(first)qSave(id);else if(QZ[id]._b){delete QZ[id];applyBundle();}else delete QZ[id];}});
+  Object.keys(QHID).forEach(id=>{if(QZ[id]&&QZ[id]._b)delete QZ[id];});
+  lsQ();renderQuizList();renderDay();if(CUR&&!$('qPlay').hidden)renderPlay();else reroute();
 }
 
 /* 탭 */
