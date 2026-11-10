@@ -181,6 +181,7 @@ header.top{align-items:flex-start}
 @media (prefers-reduced-motion:no-preference){.toast{transition:opacity .2s}.cell,.btn,.panel,.site,nav.tabs a{transition:background .2s,border-color .2s,box-shadow .2s,color .2s}.site:hover{box-shadow:0 2px 4px rgba(80,52,25,.08),0 12px 28px rgba(80,52,25,.12)}}
 /* 일일 복습 */
 [hidden]{display:none!important}
+.qact{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.btn.idk{font-size:12.5px;padding:5px 12px;color:var(--muted)}.btn.idk:hover{color:var(--seal);border-color:var(--seal)}
 .blist{display:grid;gap:4px}.brow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}.brow:last-child{border-bottom:0}.brow.miss span{color:var(--seal)}.brow .btn{font-size:12px;padding:4px 10px}
 .wn.stg{color:var(--warn);background:var(--accent-soft)}
 .qtools{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
@@ -1012,16 +1013,16 @@ function itemHtml(sid,it,n){
     h+='<div class="sa"><input type="text" class="saIn" placeholder="답을 써 보고 (선택)" aria-label="'+n+'번 답"><button type="button" class="btn" data-act="show">정답 보기</button></div>';
     if(CUR.show&&CUR.show[sid+'|'+it.id])h+='<div class="sa"><span class="ans">정답: '+esc(it.at)+'</span><button type="button" class="btn ok" data-act="self1">맞았어요</button><button type="button" class="btn ngb" data-act="self0">틀렸어요</button></div>';
   }else h+='<div class="sa"><span class="ans">정답: '+esc(it.at)+'</span>'+(r.t?'<span class="src">내 답: '+esc(r.t)+'</span>':'')+'</div>';
-  h+='<label class="guess"><input type="checkbox" data-act="guess"'+(r&&r.g?' checked':'')+'> 찍었어요 (맞아도 오답으로)</label>';
-  if(r){h+='<div class="res">'+(r.ok?'⭕ 맞음':(r.g&&(it.ch?r.p===it.ai:r.self)?'🔺 찍어서 맞음 → 오답':'❌ 틀림'))+'</div>';if(it.exp)h+='<div class="exp">'+esc(it.exp)+'</div>';}
+  h+='<div class="qact"><label class="guess"><input type="checkbox" data-act="guess"'+(r&&r.g?' checked':'')+(r&&r.u?' disabled':'')+'> 찍었어요 (맞아도 오답으로)</label>'+(r?'':'<button type="button" class="btn idk" data-act="idk">🤷 모르겠어요</button>')+'</div>';
+  if(r){h+='<div class="res">'+(r.u?'🤷 모름 → 오답 (정답·해설 확인)':r.ok?'⭕ 맞음':(r.g&&(it.ch?r.p===it.ai:r.self)?'🔺 찍어서 맞음 → 오답':'❌ 틀림'))+'</div>';if(it.exp)h+='<div class="exp">'+esc(it.exp)+'</div>';}
   return h+'</div>';
 }
 function renderPlay(){
   const list=playItems();
   if(!CUR||(!CUR.wrong&&!QZ[CUR.sid])){location.hash='#quiz';return;}
   const title=CUR.wrong?'누적 오답 다시 풀기':QZ[CUR.sid].title;
-  let ans=0,ok=0;const wrongs=[],guess=[];
-  list.forEach(({sid,it},k)=>{const r=(QZ[sid].res||{})[it.id];if(r){ans++;if(r.ok)ok++;else wrongs.push(k+1);if(r.g)guess.push(k+1);}});
+  let ans=0,ok=0;const wrongs=[],guess=[],idk=[];
+  list.forEach(({sid,it},k)=>{const r=(QZ[sid].res||{})[it.id];if(r){ans++;if(r.ok)ok++;else wrongs.push(k+1);if(r.g)guess.push(k+1);if(r.u)idk.push(k+1);}});
   const q=CUR.wrong?null:QZ[CUR.sid],all=ans===list.length&&list.length>0;
   $('qPlayHead').innerHTML='<h2>'+esc(title)+'</h2><div class="sub">'+(q?mdw(q.day)+' · '+(SUBJ[q.subj]||SUBJ.etc)[1]+' · ':'')+(CUR.only?'틀린 것만 · ':'')+list.length+'문제'+(q&&q.att>0?' · '+(q.att+1)+'번째 (보기 순서 섞음)':'')+'</div>';
   $('qMeter').innerHTML='<span>푼 문제 '+ans+' / '+list.length+' · 맞음 '+ok+'</span><div class="bar"><i style="width:'+(list.length?Math.round(ans/list.length*100):0)+'%"></i></div>';
@@ -1030,7 +1031,7 @@ function renderPlay(){
   if(bl.length){const bm=q.blankMiss||{};$('qBlank').innerHTML='<h2>백지인출</h2><p class="sub" style="margin:-4px 0 10px">10분: 안 보고 핵심 1~2줄씩 떠올리기(종이에) → 10분: 오답노트·해설로 빈 곳 채우기 → 아래 문제. 못 떠올린 건 \'못 씀\'을 눌러 두면 문제를 맞혀도 오답으로 반영돼요.</p><div class="blist">'+bl.map(b=>'<div class="brow'+(bm[b.id]?' miss':'')+'"><b>'+esc(b.id)+'</b><span>'+(b.subj?'<span class="src">'+esc(b.subj)+'</span> ':'')+esc(b.t)+'</span><button type="button" class="btn'+(bm[b.id]?' ngb':'')+'" data-b="'+esc(b.id)+'" aria-pressed="'+!!bm[b.id]+'">'+(bm[b.id]?'못 씀 ✓':'못 씀')+'</button></div>').join('')+'</div>';}
   $('qItems').innerHTML=list.map(({sid,it},k)=>itemHtml(sid,it,k+1)).join('')||'<p class="empty">풀 문제가 없어요.</p>';
   $('qDone').hidden=!all;
-  if(all)$('qDoneTxt').innerHTML='<b>'+ok+' / '+list.length+'</b> '+(wrongs.length?'· 틀림 '+wrongs.join(', ')+'번':'· 다 맞았어요 👏')+(guess.length?' · 찍음 '+guess.join(', ')+'번':'');
+  if(all)$('qDoneTxt').innerHTML='<b>'+ok+' / '+list.length+'</b> '+(wrongs.length?'· 틀림 '+wrongs.join(', ')+'번':'· 다 맞았어요 👏')+(idk.length?' · 모름 '+idk.join(', ')+'번':'')+(guess.length?' · 찍음 '+guess.join(', ')+'번':'');
   $('qRetryWrong').disabled=!wrongs.length;
   $('qNote').hidden=!(q&&q.note&&all);if(q&&q.note)$('qNote').textContent=q.note;
   $('qDel').hidden=!!CUR.wrong;
@@ -1052,6 +1053,7 @@ $('qItems').addEventListener('click',e=>{
   if(b&&!b.disabled){const g=box.querySelector('[data-act=guess]').checked;answer(sid,iid,{p:Number(b.dataset.p),g});return;}
   const a=e.target.closest('[data-act]');if(!a)return;
   if(a.dataset.act==='show'){CUR.show=CUR.show||{};const t=box.querySelector('.saIn');CUR.show[sid+'|'+iid]=1;CUR.typed=CUR.typed||{};CUR.typed[sid+'|'+iid]=t?t.value:'';renderPlay();return;}
+  if(a.dataset.act==='idk'){answer(sid,iid,{u:true,p:null,self:false,g:false});return;}
   if(a.dataset.act==='self1'||a.dataset.act==='self0'){const g=box.querySelector('[data-act=guess]').checked;answer(sid,iid,{self:a.dataset.act==='self1',g,t:(CUR.typed||{})[sid+'|'+iid]||''});}
 });
 $('qItems').addEventListener('change',e=>{
@@ -1073,7 +1075,7 @@ $('qRetryWrong').onclick=()=>retry(true);
 function resultText(){
   const list=playItems();const title=CUR.wrong?'누적 오답':QZ[CUR.sid].title,d=CUR.wrong?TODAY:QZ[CUR.sid].day;
   let ok=0;const w=[],g=[];
-  list.forEach(({sid,it},k)=>{const r=(QZ[sid].res||{})[it.id];if(r&&r.ok)ok++;else if(r){const lab=(k+1)+'번'+(it.src?'('+it.src+')':'');w.push(lab+(r.g?' 찍음':''));}});
+  list.forEach(({sid,it},k)=>{const r=(QZ[sid].res||{})[it.id];if(r&&r.ok)ok++;else if(r){const lab=(k+1)+'번'+(it.src?'('+it.src+')':'');w.push(lab+(r.u?' 모름':r.g?' 찍음':''));}});
   const bm=CUR.wrong?[]:Object.keys(QZ[CUR.sid].blankMiss||{});
   return md(d)+' '+title+' — '+ok+'/'+list.length+(w.length?'\n틀림: '+w.join(', '):'\n전부 맞음')+(bm.length?'\n백지 못 씀: '+bm.join(', '):'');
 }
