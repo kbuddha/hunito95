@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>상훈 공부 데스크</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* 원목 책상: 호두나무 갈색 잉크, 생물=올리브, 한의학=적갈색, 필수암기=주홍. 부드러운 모서리와 그림자 */
+  --bg:#efe4d4; --bg2:#e6d5bf; --paper:#fffaf2; --ink:#3a2a1d; --muted:#86705b; --line:#e5d6c2;
+  --accent:#8b5a2b; --accent-soft:#f3e4cf;
+  --bio:#5f7444; --bio-soft:#ebeedc; --han:#a5562e; --han-soft:#f7e3d3; --seal:#b0503a; --seal-soft:#f7e0d8;
+  --ok:#6b8a3e; --warn:#b07a2a;
+  --shadow:0 1px 2px rgba(80,52,25,.06),0 6px 20px rgba(80,52,25,.07);
+  --display:"Gowun Batang","Noto Serif KR","Apple SD Gothic Neo",serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1d1611; --bg2:#251c15; --paper:#2a2019; --ink:#f1e6d8; --muted:#b9a38c; --line:#3e3026;
+  --accent:#d6a46e; --accent-soft:#3b2b1d; --bio:#a9bf86; --bio-soft:#2c3122; --han:#e2a07a; --han-soft:#3c2a1f;
+  --seal:#ec8a72; --seal-soft:#3d2620; --ok:#a9c27a; --warn:#e2b05e; --shadow:0 1px 2px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.25); color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#1d1611; --bg2:#251c15; --paper:#2a2019; --ink:#f1e6d8; --muted:#b9a38c; --line:#3e3026;
+  --accent:#d6a46e; --accent-soft:#3b2b1d; --bio:#a9bf86; --bio-soft:#2c3122; --han:#e2a07a; --han-soft:#3c2a1f;
+  --seal:#ec8a72; --seal-soft:#3d2620; --ok:#a9c27a; --warn:#e2b05e; --shadow:0 1px 2px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.25); color-scheme:dark;}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:linear-gradient(180deg,var(--bg2) 0,var(--bg) 320px) var(--bg);background-color:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;min-height:100%}
+a{color:var(--accent)}
+.wrap{max-width:1240px;margin:0 auto;padding:24px 18px 64px;display:grid;gap:18px}
+header.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:end;justify-content:space-between}
+h1{font-family:var(--display);font-weight:700;font-size:28px;margin:0;letter-spacing:-.4px;text-wrap:balance}
+.sub{color:var(--muted);font-size:13px;margin-top:2px}
+.sync{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.sync i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.sync.on i{background:var(--ok)} .sync.err i{background:var(--seal)}
+.dd{display:flex;gap:8px;flex-wrap:wrap}
+.d{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:8px 14px;min-width:112px;box-shadow:var(--shadow)}
+.d span{display:block;font-size:11px;color:var(--muted)}
+.d b{font-size:18px;font-variant-numeric:tabular-nums}
+.d.done b{color:var(--ok)}
+nav.tabs{display:flex;gap:6px;flex-wrap:wrap;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:5px;box-shadow:var(--shadow);width:fit-content;max-width:100%}
+nav.tabs a{padding:7px 16px;text-decoration:none;color:var(--muted);font-weight:500;border-radius:999px}
+nav.tabs a:hover{color:var(--ink);background:var(--accent-soft)}
+nav.tabs a.on{color:#fff;background:var(--accent)}
+:root[data-theme="dark"] nav.tabs a.on{color:#21180f}
+nav.tabs a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--warn);outline-offset:2px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+@media (max-width:960px){.layout{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:var(--shadow)}
+.panel h2{font-family:var(--display);font-size:18px;margin:0 0 10px;text-wrap:balance}
+.panel h3{font-size:13px;color:var(--muted);font-weight:600;margin:14px 0 6px}
+.stack{display:grid;gap:14px}
+.layout>*,.stack>*,.view>*,.panel{min-width:0}
+.tbl{max-width:100%;-webkit-overflow-scrolling:touch}
+.view{display:none}.view.on{display:grid;gap:14px}
+.dayhead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.dayhead h2{margin:0;font-size:22px}
+.btn{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.banner{border-radius:14px;padding:10px 14px;font-size:14px;background:var(--accent-soft)}
+.banner.mock{background:var(--seal-soft)} .banner.sun{background:var(--bio-soft)}
+.rows{display:grid}
+.row{display:grid;grid-template-columns:28px 104px minmax(0,1fr);gap:4px 10px;padding:11px 0;border-bottom:1px solid var(--line);align-items:start}
+.row:last-child{border-bottom:0}
+.row.rest{grid-template-columns:28px 104px 1fr;color:var(--muted);font-size:13px;padding:6px 0}
+.row input[type=checkbox]{width:20px;height:20px;margin:2px 0 0;accent-color:var(--ok);cursor:pointer}
+.tm{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:1px}
+.nm{font-weight:600}
+.nm .tag{font-size:11px;font-weight:600;padding:1px 7px;border-radius:20px;margin-left:6px;vertical-align:1px}
+.tag.bio{background:var(--bio-soft);color:var(--bio)} .tag.han{background:var(--han-soft);color:var(--han)} .tag.pil{background:var(--seal-soft);color:var(--seal)} .tag.etc{background:var(--accent-soft);color:var(--accent)}
+.det{font-size:13.5px;color:var(--ink);margin-top:2px}
+.det small{display:block;color:var(--muted);font-size:12.5px}
+.row.done .nm,.row.done .det{opacity:.55}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:3px 8px;text-decoration:none;color:var(--accent);background:var(--bg)}
+.chip:hover{border-color:var(--accent)}
+.meter{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.meter .bar{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.meter .bar i{display:block;height:100%;background:var(--ok)}
+.wkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.wk{border:1px solid var(--line);border-radius:14px;background:var(--bg);padding:10px 12px;font-size:13.5px}
+.wk b{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:2px}
+.wk.bio{border-left:4px solid var(--bio)} .wk.han{border-left:4px solid var(--han)} .wk.etc{border-left:4px solid var(--accent)}
+.timer{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.timer .clock{font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;min-width:110px}
+.timer .ph{font-size:13px;color:var(--muted)}
+/* sites */
+.sites{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.site{display:grid;gap:6px;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:14px;background:var(--paper);text-decoration:none;color:var(--ink)}
+.site:hover{border-color:var(--accent)}
+.site .t{font-family:var(--display);font-size:17px;font-weight:700}
+.site .u{font-size:12.5px;color:var(--muted)}
+.site .go{font-size:13px;color:var(--accent);font-weight:600}
+/* plan table */
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:860px;font-size:13px}
+th,td{border-bottom:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+th{font-size:12px;color:var(--muted);font-weight:600;background:var(--bg)}
+tr.cur td{background:var(--accent-soft)}
+td.w{white-space:nowrap;font-weight:600}
+td.w small{display:block;font-weight:400;color:var(--muted)}
+.ms{display:grid;gap:6px}
+.m{display:grid;grid-template-columns:70px 1fr auto;gap:10px;font-size:13.5px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.m:last-child{border-bottom:0}
+.m .when{font-variant-numeric:tabular-nums;color:var(--muted)}
+.m .st{font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.m.past .st{color:var(--ok)} .m.next .st{color:var(--warn);font-weight:600}
+ol.rules{margin:0;padding-left:20px;font-size:13.5px}
+/* progress */
+.pg{display:grid;gap:14px}
+.pgrow h4{margin:0 0 6px;font-size:13.5px;display:flex;justify-content:space-between;gap:8px}
+.pgrow h4 small{color:var(--muted);font-weight:400;font-variant-numeric:tabular-nums}
+.cells{display:flex;flex-wrap:wrap;gap:4px}
+.cell{font:inherit;font-size:12px;min-width:34px;height:30px;padding:0 6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;cursor:pointer;font-variant-numeric:tabular-nums}
+.cell.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.cell.tgt{border:2px solid var(--warn)}
+.cell.on.tgt{border-color:var(--warn)}
+.pgrow h4 .wkr.nx{background:transparent;border-color:var(--line);color:var(--muted);font-weight:400}
+.cell.late{border:1.5px dashed var(--seal);color:var(--seal)}
+.pgrow h4 .wkr{font-style:normal;font-size:12px;font-weight:600;color:var(--ink);background:var(--accent-soft);border:1px solid var(--warn);border-radius:999px;padding:1px 8px;margin-left:auto}
+.num{display:flex;gap:8px;align-items:center}
+.num input{width:90px;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+/* side */
+aside.side{position:sticky;top:14px;display:grid;gap:12px}
+@media (max-width:960px){aside.side{position:static}}
+.side label{font-size:12.5px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px}
+textarea,.side input[type=text]{width:100%;font:inherit;font-size:14px;border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--bg);color:var(--ink);resize:vertical}
+textarea{min-height:220px;line-height:1.6}
+.saved{font-size:12px;color:var(--muted)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.notes .n{border-bottom:1px solid var(--line);padding:12px 0}
+.notes .n:last-child{border-bottom:0}
+.notes .n h4{margin:0 0 4px;font-size:14px}
+.notes .n pre{white-space:pre-wrap;font:inherit;font-size:14px;margin:0}
+.notes .n .w{font-size:13px;color:var(--seal);margin-top:4px}
+.empty{color:var(--muted);font-size:13.5px}
+.vowbox textarea{min-height:64px;font-family:var(--display);font-size:17px;line-height:1.7;background:var(--accent-soft);border-color:transparent}
+.vowbox h2{margin-bottom:8px}
+header.top{align-items:flex-start}
+.notes .vrow h4{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.dday.hot{background:var(--seal);color:#fff;font-size:14.5px;font-weight:800;padding:4px 14px;letter-spacing:.4px;vertical-align:0;margin-left:0;box-shadow:0 2px 8px rgba(176,80,58,.45)}
+:root[data-theme="dark"] .dday.hot{color:#21180f}
+.dday{font-family:var(--body);font-size:13px;font-weight:600;color:var(--seal);background:var(--seal-soft);border-radius:999px;padding:2px 10px;vertical-align:4px;margin-left:6px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cal{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:10px 12px;box-shadow:var(--shadow);width:262px;max-width:100%}
+.calh{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;margin-bottom:6px}
+.calh button{border:0;background:none;color:var(--muted);cursor:pointer;font:inherit;padding:2px 8px;border-radius:8px}
+.calh button:hover{color:var(--ink);background:var(--accent-soft)}
+.calg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
+.calg .dw{font-size:10.5px;color:var(--muted)}
+.calg button{font:inherit;font-size:12px;height:28px;border:1px solid transparent;border-radius:8px;background:var(--bg);color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums;padding:0}
+.calg button.ex{background:var(--ok);color:#fff}
+.calg button.td{border-color:var(--warn);font-weight:700}
+.calg button:disabled{opacity:.35;cursor:default}
+.calf{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;color:var(--muted);gap:6px}
+.calf .btn{font-size:12px;padding:4px 10px;white-space:nowrap}
+.bk select{width:100%;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:10px;padding:6px 8px;background:var(--bg);color:var(--ink);margin:6px 0}
+.bk .acts{margin-top:4px}
+.bk .btn{font-size:12px;padding:5px 11px}
+.bk .btn.warn{border-color:var(--seal);color:var(--seal)}
+.seg{display:inline-flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px}
+.segb{font:inherit;font-size:13px;border:0;background:transparent;color:var(--muted);padding:5px 14px;border-radius:999px;cursor:pointer}
+.segb:hover{color:var(--ink)}
+.segb.on{background:var(--accent);color:#fff}
+.notes .vrow .vw{font-size:17px;margin:0}
+.notes .n .vw{font-family:var(--display);color:var(--accent);font-size:14.5px;margin-bottom:4px}
+.cheer{font-size:13.5px;color:var(--muted);border-left:3px solid var(--accent);padding-left:10px}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none}
+.toast.on{opacity:1}
+.motto{position:relative;overflow:hidden;border-radius:22px;padding:22px 26px;color:#fbf3e6;box-shadow:var(--shadow);
+  background:repeating-linear-gradient(97deg,rgba(255,255,255,.035) 0 2px,transparent 2px 9px),repeating-linear-gradient(88deg,rgba(0,0,0,.05) 0 1px,transparent 1px 23px),linear-gradient(135deg,#7a4e2c,#5c3a20 55%,#4a2e19)}
+.motto p{margin:0;font-family:var(--display);font-size:21px;line-height:1.75;letter-spacing:.2px;text-wrap:balance}
+.motto p b{font-weight:700;color:#ffe2b8}
+.motto small{display:block;margin-top:6px;font-size:12px;color:#e8d3b8;opacity:.85}
+@media (max-width:520px){.motto p{font-size:18px}}
+@media (prefers-reduced-motion:no-preference){.toast{transition:opacity .2s}.cell,.btn,.panel,.site,nav.tabs a{transition:background .2s,border-color .2s,box-shadow .2s,color .2s}.site:hover{box-shadow:0 2px 4px rgba(80,52,25,.08),0 12px 28px rgba(80,52,25,.12)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div>
+    <h1>공부 데스크</h1>
+    <div class="sub" id="sub">마스터플랜 v7.2 · 생물 하루 2강 + 워크북 2h + 필수암기 2h (우선순위: 인강 > 워크북 = 필수암기 > OUTPUT · OUTPUT은 틈틈이 자율) · 11/20~ v6.4 순공 12h (생물 A 4 · 생물 B 4 · 한의학 4) + 운동·필수암기 1.5h + 아침 복습 1h · 마무리 정리 30분 (순공 밖)</div>
+    <div class="dd" id="dd" style="margin-top:10px"></div>
+  </div>
+  <div class="cal" id="cal" aria-label="운동 달력"></div>
+</header>
+
+<div class="motto" role="note" aria-label="오늘의 다짐">
+  <p>침착하고 차분하게,<br>즐거운 마음으로,<br><b>나는 할 수 있다.</b></p>
+</div>
+
+<nav class="tabs" aria-label="화면">
+  <a href="#today" data-v="today">오늘</a>
+  <a href="#study" data-v="study">공부 사이트</a>
+  <a href="#plan" data-v="plan">주간 계획</a>
+  <a href="#progress" data-v="progress">진도</a>
+  <a href="#notes" data-v="notes">정리 모음</a>
+</nav>
+
+<div class="layout">
+<main class="stack">
+
+<section class="view" id="v-today">
+  <div class="panel vowbox">
+    <h2 id="vowTitle">오늘의 다짐</h2>
+    <label for="vow" class="sub" style="display:block;margin:-4px 0 6px">아침에 한 줄 · 날짜별로 저장되고 모든 기기에서 보여요</label>
+    <textarea id="vow" rows="2" placeholder="예) 오늘은 생물 A 4시간 끝까지 앉아 있는다."></textarea>
+    <div class="saved" id="vowSaved" style="margin-top:4px"></div>
+  </div>
+  <div class="panel">
+    <div class="dayhead">
+      <h2 id="dayTitle">오늘</h2>
+      <div class="acts">
+        <button class="btn" id="prevDay" type="button">◀ 전날</button>
+        <button class="btn" id="todayBtn" type="button">오늘</button>
+        <button class="btn" id="nextDay" type="button">다음날 ▶</button>
+      </div>
+    </div>
+    <div class="meter" style="margin:8px 0 10px"><span id="doneTxt">0 / 0 완료</span><div class="bar"><i id="doneBar" style="width:0"></i></div></div>
+    <div id="dayBanner"></div>
+    <div class="rows" id="rows"></div>
+  </div>
+  <div class="panel">
+    <h2 id="wkTitle">이번 주 목표</h2>
+    <div class="wkgrid" id="wkGrid"></div>
+    <p class="sub" style="margin-top:10px">일요일 낮 = 새 진도 없이 밀린 것 따라잡기 + 10분 점검 · 일요일 저녁 = 휴식 · 체크 안 된 칸만 다음 주로</p>
+  </div>
+  <div class="panel">
+    <h2>공부 타이머</h2>
+    <div class="timer">
+      <div class="clock" id="clock">60:00</div>
+      <div><div class="ph" id="phase">1시간 공부 → 10분 휴식</div>
+      <div class="acts" style="margin-top:6px"><button class="btn pri" id="tStart" type="button">시작</button><button class="btn" id="tReset" type="button">처음으로</button></div></div>
+      <div class="ph" id="tCount">오늘 완료한 1시간: 0</div>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="v-study">
+  <div class="panel">
+    <h2>공부 사이트</h2>
+    <p class="sub" style="margin:-4px 0 12px">눌러서 열기. 각 사이트의 체크·정리 바는 그 사이트에 저장되고 맥·아이폰·아이패드에서 같이 보입니다.</p>
+    <div class="sites" id="sites"></div>
+  </div>
+  <div class="panel">
+    <h2>맥에만 있는 자료</h2>
+    <p class="sub" style="margin:0">계획표 PDF는 바탕화면 Claude_결과물/계획표 폴더에 있어요: 한의대편입_마스터플랜_v7.2_워크북복구.pdf (11/10 v7.2 · v7.1 · 강의 스프린트 v7 · 토익 v6.4 · 기출 대체안 v6.3 포함) · 매일루틴_한장_v6_v1.6.pdf · 생리학강의_3시간교대표.pdf</p>
+  </div>
+</section>
+
+<section class="view" id="v-plan">
+  <div class="panel">
+    <div class="dayhead" style="margin-bottom:10px"><h2 style="margin:0">주간 체크 · v7</h2>
+      <button class="btn pri" id="expCsv" type="button">스케줄 내보내기 (CSV)</button></div>
+    <p class="sub" style="margin:-4px 0 10px">10/29부터 시험(1월)까지 날짜별 시간표 전체 + 완료 체크 + 하루 정리·틀린 번호를 한 파일로. 노션 → 가져오기 → CSV로 올리면 표가 돼요 (엑셀·구글 시트도 OK).</p>
+    <div class="tbl"><table>
+      <thead><tr><th>주</th><th>생물 A · 강의 → 시냅스 (4h)</th><th>생물 B · 문제 세트 / 회독 (4h)</th><th>써머리</th><th>한의학 (4h)</th><th>모의 · 토익</th></tr></thead>
+      <tbody id="planBody"></tbody>
+    </table></div>
+  </div>
+  <div class="panel">
+    <h2>마감 날짜</h2>
+    <div class="ms" id="ms"></div>
+  </div>
+  <div class="panel">
+    <h2>원칙</h2>
+    <h3>끝까지 지키는 것</h3>
+    <ol class="rules">
+      <li>생물 강의 완강 · 워크북·TB·N제·시냅스 1회독 전부</li>
+      <li>TB · 시냅스 최소 3회독 (시냅스 5회독)</li>
+      <li>써머리 5회독 · 원문카드 3회독</li>
+      <li>모의고사 8회 + 당일 오답</li>
+      <li>일요일 저녁 휴식</li>
+    </ol>
+    <h3>밀렸을 때 줄이는 순서</h3>
+    <ol class="rules">
+      <li>기출 재구성 2회독 → 모의 오답으로 대체 (적용함)</li>
+      <li>시냅스 4회독 → 5회독과 합치기</li>
+      <li>2회독 범위 → 1회독 표시분만 (N제는 적용함)</li>
+    </ol>
+    <p class="sub">시작일만 미루고 끝 날짜는 이 순서로 지킨다. 밤·휴식 시간에 메우지 않기. (v6.4: '토익 11/29 생략'은 순서에서 뺌 — 11/15에 980 이상일 때만 생략)</p>
+    <h3>강의 스프린트 (v7.2 · 11/10 개정)</h3>
+    <ol class="rules">
+      <li>11/9 생리 24~32강 완강 (3강×3블록) + 저녁 OUTPUT 9주차 나머지</li><li>v7.2: 워크북 2h 복구 — OUTPUT은 워크북 자리에 넣지 않음. 10주차·FINAL은 정해진 시간 없이 틈틈이 자율</li><li>우선순위: 생물 이론 인강 > 워크북 = 필수암기 > OUTPUT (밀리면 OUTPUT부터 미룸)</li><li>11/9에 못 들은 생물 2강 → 11/14 따라잡기 · 11/19 버퍼 · 생리 빈칸은 11/15 점검 때 자리 정하기</li>
+      <li>11/8~11/18 생물 통합이론 하루 2강 (8회분 · 10h) + 그날 단원 워크북 2h + 필수암기 2h</li>
+      <li>일요일 저녁 휴식 유지 → 11/8은 1강만 · 11/14(토)는 토익 준비 · 11/15 토익 뒤 2강</li>
+      <li>11/19 버퍼 — 남은 회분 + 모의① 원준 생리</li>
+      <li>원론 · 원문카드 · TB·N제 순서는 미정 → 11/15 주간 점검 때 정하기</li>
+    </ol>
+    <h3>토익 (v6.4 · 11/5)</h3>
+    <ol class="rules">
+      <li>11/8 응시 안 함 — 그 에너지는 필기(생리 완강·OUTPUT 마감)에</li>
+      <li>11/15(일) 본 시험 · 최선 → 성적 11/24(화) 12시</li>
+      <li>980 이상이면 토익 끝 · 아침 P5 중단</li>
+      <li>미달이면 11/29(일) 마지막 응시 → 결과와 상관없이 토익 종료 (접수 안 했으면 특별추가접수 11/26 13시까지)</li>
+    </ol>
+    <h3>기출 대체안 (v6.3 · 11/3)</h3>
+    <ol class="rules">
+      <li>기출 재구성본을 먼저 → 12/6(일) 낮 샘플 30분으로 판단</li>
+      <li>별로면 김영편입 권지연 기출풀이 강의+교재 (최근 3개년 · 한의사 응시 복기 · 15강 841분)로 교체 → 12/14 시작</li>
+      <li>교체하면 12/14~12/27 한의학 4h = 원문카드 2회독 2.5h + 기출 1.5h · 강의 2배속(약 7h), 막힌 곳만 정속</li>
+      <li>먼저 답 가리고 풀기 → 강의는 막힌 문제 위주 (대리만족 금지) · 오답은 원문카드 위치에 표시</li>
+      <li>밀린 강의는 일요일 낮(12/20 · 12/27)에 · 끝 12/27은 지킨다</li>
+    </ol>
+    <h3>회독 규칙</h3>
+    <ol class="rules">
+      <li>1회독 = 인풋 (답지 보며 역방향)</li>
+      <li>2회독 = 첫 아웃풋 (가리고 풀기, 오답 표시 · 찍어서 맞힌 것도 오답)</li>
+      <li>3회독부터 = 오답만 · 또 틀리면 오답 표시 하나 더</li>
+      <li>오답 표시 2개 이상 = 개념 리스트 후보 → 최종 200~300</li>
+    </ol>
+  </div>
+</section>
+
+<section class="view" id="v-progress">
+  <div class="panel">
+    <h2>진도 체크</h2>
+    <p class="sub" style="margin:-4px 0 12px">칸을 누르면 완료 표시. 노란 테두리 = 이번 주에 나갈 범위 (모든 과목) · 빨간 점선 = 지난주까지 범위인데 아직 체크 안 된 칸 (일요일 낮에 따라잡기).</p>
+    <div class="pg" id="pg"></div>
+  </div>
+</section>
+
+<section class="view" id="v-notes">
+  <div class="panel">
+    <div class="dayhead"><div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px"><h2 style="margin:0">정리 모음</h2><div class="seg" role="tablist" aria-label="정리 모음 보기"><button type="button" class="segb on" data-m="memo" role="tab" aria-selected="true">하루 정리</button><button type="button" class="segb" data-m="vow" role="tab" aria-selected="false">오늘의 다짐</button></div></div>
+      <div class="acts"><button class="btn" id="copyAll" type="button">전체 복사</button><button class="btn" id="dlAll" type="button" hidden>파일로 받기</button></div>
+    </div>
+    <p class="sub" style="margin:4px 0 8px">날마다 오른쪽 정리 바에 쓴 내용과 틀린 번호가 날짜순으로 모입니다. 출력할 땐 파일로 받아 열어서 인쇄하세요.</p>
+    <div class="notes" id="notes"></div>
+  </div>
+</section>
+
+</main>
+
+<aside class="side">
+  <div class="panel">
+    <h2 id="sideTitle">오늘 정리</h2>
+    <label for="memo">왜 그 답인지 · 필요한 핵심 개념</label>
+    <textarea id="memo" placeholder="예) N제 3단원 12번 — 답이 ③인 이유: …&#10;핵심 개념: …"></textarea>
+    <label for="wrong" style="margin-top:10px">오늘 틀린 번호</label>
+    <input type="text" id="wrong" placeholder="예) 워크북 5단원 OX 3, 7 · TB 5-14">
+    <div class="acts" style="margin-top:8px;justify-content:space-between;align-items:center">
+      <span class="saved" id="saved">저장 대기</span>
+      <button class="btn" id="copyWrong" type="button">틀린 번호 복사</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="sync" id="sync"><i></i><span>연결 중…</span></div>
+    <p class="cheer" id="cheer" style="margin:10px 0 0"></p>
+  </div>
+  <div class="panel bk">
+    <h2 style="font-size:16px;margin-bottom:4px">백업</h2>
+    <div class="saved" id="bkInfo">자동 백업 준비 중…</div>
+    <label for="bkSel" style="margin-top:8px">자동 백업 (매일 1번 · 최근 14일 보관)</label>
+    <select id="bkSel"><option value="">— 백업 고르기 —</option></select>
+    <div class="acts">
+      <button class="btn warn" id="bkRestore" type="button">이 백업으로 되돌리기</button>
+      <button class="btn" id="bkNow" type="button">지금 백업</button>
+    </div>
+    <div class="acts" style="margin-top:8px">
+      <button class="btn" id="bkFile" type="button">백업 파일 받기</button>
+      <label class="btn" for="bkUp" style="margin:0;font-weight:400;color:var(--ink)">파일로 되돌리기</label>
+      <input type="file" id="bkUp" accept=".json,application/json" hidden>
+    </div>
+  </div>
+</aside>
+</div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+/* ───────── 계획 데이터 (마스터플랜 v6, 2026-10-28) ───────── */
+const SITES=[
+ {id:'nje',t:'이동윤 N제 테스트',u:'https://claude.ai/artifact/QdbCTdFZ1GzFbje2naqoFQ',d:'Perfect Biology N제 444문제 · OX 1,611문항 · 써머리 장 순서',w:'생물 B · 세트 3단계 (워크북 → TB → N제)'},
+ {id:'sum',t:'생물 써머리 1–4권 뼈대',u:'https://claude.ai/artifact/XxWeeGoRwNAeip9JNFDggE',d:'단원 트리 · 요약 · OX',w:'생물 B · 써머리 5회독 (11/30~)'},
+ {id:'pil',t:'한의학 필수암기',u:'https://claude.ai/artifact/1i6d2xDBDzDoGkfZbqPBfc',d:'외울 표·원문 51개 · 날짜판 · ★ 반복',w:'운동 + 필수암기 1.5h 블록 (11/2~)'},
+ {id:'hsum',t:'한의학총강 써머리',u:'https://claude.ai/artifact/WBBw9LAvVE9Wx2VcDw5sN8',d:'총강 요약 정리',w:'한의학 4h · 원문카드 회독과 같이'},
+ {id:'gichul',t:'총강 기출 풀이',u:'https://claude.ai/artifact/AxBhCHTXvDALPF7Pzj9dDs',d:'총강 기출 문제 풀이',w:'한의학 · 기출 1회독 (12/14~) — 재구성, 별로면 권지연 (12/6 판단)'}
+];
+const SITE=Object.fromEntries(SITES.map(s=>[s.id,s]));
+const WEEKS=[
+ {k:"W3′",s:'2026-10-29',e:'2026-11-01',A:'강의 25~27',B:'세트 3~5 (워크북·TB·N제)',S:'—',H:'OUTPUT 8주차 끝 → 9주차 · 생리 5~13',M:'한자 합격 · 종료',lec:27,set:5},
+ {k:'W4',s:'2026-11-02',e:'2026-11-08',A:'~11/4 강의 · 11/8 생물 1강 (v7 스프린트)',B:'~11/4 세트 · 11/8 워크북 1h',S:'—',H:'11/5 생리 + OUTPUT 10주차 · 11/6 생리 완강 · 11/7 복습·빈칸 + OUTPUT FINAL',M:'토익 아침 P5 20분 · 11/8 응시 안 함 · 금 저녁 가족식사 · 일 저녁 휴식',lec:28,set:11},
+ {k:'W5',s:'2026-11-09',e:'2026-11-15',A:'11/9 생리 완강 · 11/10~ 생물 강의 하루 2강 (8회분 · 10h) · 11/14 쉼',B:'워크북 2h — 그날 들은 단원 (v7.2 복구)',S:'—',H:'필수암기 2h · OUTPUT 10주차·FINAL은 틈틈이 자율 (v7.2)',M:'11/14 토익 준비 · 11/15 토익 본 시험 → 오후 2강',lec:40,set:17},
+ {k:'W6',s:'2026-11-16',e:'2026-11-22',A:'2강씩 → 46강 완강 11/18 · 11/19 버퍼 · 11/20~ 미정',B:'워크북 2h · 11/20~ 미정 (TB·N제)',S:'—',H:'11/19 모의① 원준 생리 · 원론·원문카드 미정 (11/15 점검)',M:'—',lec:46,set:23},
+ {k:'W7',s:'2026-11-23',e:'2026-11-29',A:'세트(TB·N제)로 — 11/15 점검 때 확정',B:'세트 24~35 · 1회독 끝 (11/28)',S:'—',H:'원론 · 원문카드 — 미정 (11/15 점검 때)',M:'토익 성적 11/24 → 미달이면 11/29 마지막 응시 (추가접수 11/26 13시)',lec:46,set:35},
+ {k:'W8',s:'2026-11-30',e:'2026-12-06',A:'시냅스 1회독 ~½',B:'2회독 (가리고) ~⅓',S:'1회',H:'원문카드 1회독 + 대조 · 12/6(일) 기출 샘플 30분 → 재구성 유지 / 권지연 결정',M:'모의②③ 12/2 · 12/5 지혜 총강'},
+ {k:'W9',s:'2026-12-07',e:'2026-12-13',A:'시냅스 1회독 끝 (12/12) → 2회독',B:'2회독 ~⅔',S:'1회 끝 → 2회',H:'원문카드 1회독 끝 (12/11) → 2회독 (12/13~)',M:'모의④⑤ 12/9 · 12/12 지혜 총강'},
+ {k:'W10',s:'2026-12-14',e:'2026-12-20',A:'시냅스 2회독 ~½',B:'2회독 끝 (12/19) → 3회독 오답',S:'2회 끝 → 3회',H:'원문카드 2회독 (3h) · 기출 1회독 (1h) — 권지연이면 2.5h · 1.5h',M:'모의⑥⑦ 12/16 · 12/19 원준 집요'},
+ {k:'W11',s:'2026-12-21',e:'2026-12-27',A:'시냅스 2회독 끝 (12/24) → 3회독 (12/25~)',B:'3회독 오답 끝 (12/24) → 개념 추리기',S:'3회 끝 → 4회',H:'원문카드 2회독 끝 · 기출 1회독 끝 (12/27, 권지연이면 15강까지)',M:'모의⑧ 12/23 원준 집요'},
+ {k:'W12',s:'2026-12-28',e:'2027-01-03',A:'시냅스 3회독 끝 (12/29) → 4회독 (12/30~1/3) · 개념 200~300',B:'개념 200~300 추리기',S:'5회 끝 (12/31)',H:'원문카드 3회독 (오답·출제 표시만) → 개념 리스트',M:'12/31 리스트 목표'},
+ {k:'1월',s:'2027-01-04',e:'2027-02-28',A:'시냅스 5회독 (시험 직전 오답) · 개념 리스트 완벽 (1/7)',B:'개념 리스트 완벽 (1/7)',S:'매일 유지',H:'원문카드 오답 · 모의 오답 재풀이',M:'시험'}
+];
+const MOCKS={'2026-11-19':'모의① 원준 생리','2026-12-02':'모의② 지혜 총강 1','2026-12-05':'모의③ 지혜 총강 2','2026-12-09':'모의④ 지혜 총강 3','2026-12-12':'모의⑤ 지혜 총강 4','2026-12-16':'모의⑥ 원준 집요 1','2026-12-19':'모의⑦ 원준 집요 2','2026-12-23':'모의⑧ 원준 집요 3'};
+const FRI_REST={'2026-11-06':'가족식사'};   // 이번 주만: 금요일 저녁 = 휴식
+const SUN_STUDY={}; /* v7: 11/8은 스프린트 일요일로 */ // 그 대신 일요일 = 공부 (금요일 생물 B 이월)
+/* 진도 체크: 주차별로 '이번 주에 나갈 범위' (노란 테두리) */
+const WR={
+ "W3′":{lec:[25,27],wb1:[3,5],tb1:[3,5],nj1:[3,5],out:['8','9'],phy:[5,13]},
+ 'W4':{lec:[28,33],wb1:[6,11],tb1:[6,11],nj1:[6,11],out:['9','10'],phy:[14,32]},
+ 'W5':{lec:[34,39],wb1:[12,17],tb1:[12,17],nj1:[12,17],out:['9','10','F'],phy:[24,32],won:[1,3],card:['1'],mock:['①']},
+ 'W6':{lec:[40,45],wb1:[18,23],tb1:[18,23],nj1:[18,23],won:[4,24],card:['1']},
+ 'W7':{lec:[46,46],wb1:[24,35],tb1:[24,35],nj1:[24,35],won:[25,36],card:['1']},
+ 'W8':{wb2:[1,12],tb2:[1,12],nj2:[1,12],syn:['1'],sum:['1'],card:['1'],mock:['②','③']},
+ 'W9':{wb2:[13,23],tb2:[13,23],nj2:[13,23],syn:['1','2'],sum:['1','2'],card:['1','2'],mock:['④','⑤']},
+ 'W10':{wb2:[24,35],tb2:[24,35],nj2:[24,35],syn:['2'],sum:['2','3'],card:['2'],mock:['⑥','⑦']},
+ 'W11':{syn:['2','3'],sum:['3','4'],card:['2'],mock:['⑧']},
+ 'W12':{syn:['3','4'],sum:['4','5'],card:['3']},
+ '1월':{syn:['5'],sum:['5']}
+};
+/* v6.3 기출 대체안: 재구성 기출이 별로면 김영편입 권지연 기출풀이(최근 3개년 · 총 841분)로 교체 */
+const KWON={'2026-12-14':'0·1강 OT·음양 (94분)','2026-12-15':'2강 오행 (44분)','2026-12-17':'3강 정신기혈진액 (93분)','2026-12-18':'4강 장부 (117분)','2026-12-21':'5강 경락 (79분)','2026-12-22':'6·7·8강 병인병기·오운육기·진단 (107분)','2026-12-24':'9강 변증 (81분)','2026-12-25':'10·11·12강 치법·본초·방제 (105분)','2026-12-26':'13·14강 임상각과 상·하 (78분)','2026-12-27':'15강 의학사 (43분) + 밀린 강의','2026-12-20':'밀린 권지연 강의 따라잡기'};
+const TOEIC={'2026-11-15':'토익 응시 — 본 시험 · 최선','2026-11-29':'토익 마지막 응시 (11/15 미달일 때만 · 아니면 공부)'};
+const PILSU=[["2026-11-02","D1","오행귀류표"],["2026-11-03","D2","음양·오행 관계 · 사상의학 · 원리편"],["2026-11-04","D3","오운"],["2026-11-05","D4","육기 · 육보사절기"],["2026-11-06","D5","오장① · 오장②"],["2026-11-07","D6","상고천진론 · 육부·기항지부"],["2026-11-08","주간테스트",""],["2026-11-09","D7","명문·삼초 · 기의 종류"],["2026-11-10","D8","혈·진액 · 정기신혈편"],["2026-11-11","D9","장부편 · 신체부위"],["2026-11-12","D10","유주① 순서 · 경락 분류"],["2026-11-13","D11","유주② 手經(수경)"],["2026-11-14","D12","유주③ 足經(족경) · 신형편"],["2026-11-15","주간테스트",""],["2026-11-16","D13","오수혈① 음경 · 팔회·하합"],["2026-11-17","D14","오수혈② 양경 · 구침·보사배열"],["2026-11-18","D15","원락극 · 모혈·배수혈"],["2026-11-19","D16","기경팔맥 · 흉부·배요선"],["2026-11-20","D17","시동병·소생병 · 경락편"],["2026-11-21","D18","육음·칠정 · 병인 나머지 · 온병 특징"],["2026-11-22","주간테스트",""],["2026-11-23","D19","병기십구조 · 병기"],["2026-11-24","D20","육경변증 · 위기영혈·삼초"],["2026-11-25","D21","사진 · 팔강·장부변증"],["2026-11-26","D22","본초 총론 · 오장고욕보사"],["2026-11-27","D23","본초 대표약① · 본초 대표약②"],["2026-11-28","D24","방제 · 의학사① 중국"],["2026-11-29","주간테스트",""],["2026-11-30","D25","의학사② 한국 · 여성·소아·양생편"],["2026-12-01","D26","임상각과 · 양생"],["2026-12-02","1주 재테스트",""],["2026-12-03","2주 재테스트",""],["2026-12-04","3주 재테스트",""],["2026-12-05","4주 재테스트",""],["2026-12-06","★ 회독 1",""],["2026-12-07","★ 회독 2",""],["2026-12-08","FINAL TEST",""]];
+const PIL=Object.fromEntries(PILSU.map(p=>[p[0],{l:p[1],t:p[2]}]));
+const MILES=[
+ ['2026-11-09','생리 강의 완강 (v7.1)'],
+ ['2026-11-10','v7.2 · 워크북 2h 복구 · OUTPUT은 자율'],
+ ['2026-11-15','토익 본 시험 · 주간 점검 때 11/20~ 계획(원론·원문카드·TB·N제) 정하기'],
+ ['2026-11-18','생물 강의 46강 완강 (11/19 버퍼)'],
+ ['2026-11-19','모의① 원준 생리'],
+ ['2026-11-24','토익 성적 발표 12시 — 980↑면 토익 끝 · 미달이면 11/29 (추가접수 11/26 13시)'],
+ ['2026-11-26','원론 강의 완강 (미정)'],
+ ['2026-11-28','워크북·TB·N제 세트 1회독 끝'],
+ ['2026-12-01','한의학 필수암기 1회독 끝'],
+ ['2026-12-11','원문카드 1회독 끝'],
+ ['2026-12-12','시냅스 1회독 끝'],
+ ['2026-12-19','세 권 2회독 끝'],
+ ['2026-12-24','시냅스 2회독 끝 · 3회독 오답 끝'],
+ ['2026-12-31','써머리 5회 · 개념 리스트'],
+ ['2027-01-07','개념 200~300 완벽 · 최종 버퍼']
+];
+const CHEERS=['오늘 칸 하나만 채우면 된다. 순서는 고정, 날짜는 목표.','밀린 건 밤에 메우지 않기. 일요일 낮이 따라잡는 시간이야.','찍어서 맞힌 것도 오답. 정직하게 표시할수록 1월이 편해진다.','한자 1급 딴 집중력 그대로 옮겨 오면 된다.','1시간 공부하고 10분은 꼭 쉬기. 쉬는 것도 계획의 일부.','일요일 저녁은 공부 금지. 다음 주를 위한 충전 시간.'];
+
+/* ───────── 날짜 ───────── */
+const DN='일월화수목금토';
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const addDays=(s,n)=>{const d=parse(s);d.setDate(d.getDate()+n);return iso(d)};
+const md=s=>{const d=parse(s);return (d.getMonth()+1)+'/'+d.getDate()};
+const mdw=s=>{const d=parse(s);return (d.getMonth()+1)+'/'+d.getDate()+' ('+DN[d.getDay()]+')'};
+const diff=(a,b)=>Math.round((parse(b)-parse(a))/864e5);
+const TODAY=iso(new Date());
+const between=(s,a,b)=>s>=a&&s<=b;
+function weekOf(s){ if(s<WEEKS[0].s) return WEEKS[0]; return WEEKS.find(w=>between(s,w.s,w.e))||WEEKS[WEEKS.length-1]; }
+
+/* ───────── 그날 블록 계산 ───────── */
+function summaryRound(s){
+  if(between(s,'2026-11-30','2026-12-09'))return '써머리 1회 (느려도 OK · 꾸겨넣기)';
+  if(between(s,'2026-12-10','2026-12-16'))return '써머리 2회 (덮고 떠올리기)';
+  if(between(s,'2026-12-17','2026-12-22'))return '써머리 3회';
+  if(between(s,'2026-12-23','2026-12-27'))return '써머리 4회';
+  if(between(s,'2026-12-28','2026-12-31'))return '써머리 5회';
+  if(s>'2026-12-31')return '써머리 매일 짧게 유지';
+  return '';
+}
+function bioA(s,w){
+  if(s>'2026-11-19'&&s<='2026-11-23')return {d:'(미정 · 11/15 점검 때) 강의는 끝 → 세트 TB·N제로',x:'워크북은 스프린트 때 같이 함'};
+  if(s<='2026-11-23')return {d:'강의 1회차 · 하루 1회차, 넘치면 1.25배속',x:'이번 주 '+w.A+(w.lec?' · 이번 주 목표 '+w.lec+'강까지':'')};
+  if(s<='2026-11-29')return {d:'세트 마무리에 투입 (생물 8h · 하루 2단원)',x:'워크북 → TB → N제'};
+  if(s<='2026-12-12')return {d:'시냅스 7.0 1회독 · 답지 보며 역방향',x:'1회독 끝 12/12'};
+  if(s<='2026-12-24')return {d:'시냅스 2회독 · 가리고 첫 아웃풋',x:'2회독 끝 12/24'};
+  if(s<='2026-12-29')return {d:'시냅스 3회독 · 오답만',x:'3회독 끝 12/29'};
+  if(s<='2027-01-03')return {d:'시냅스 4회독 · 오답만 (더 빠르게) + 개념 200~300 추리기',x:''};
+  return {d:'시냅스 5회독 · 시험 직전 오답',x:'개념 리스트 완벽 1/7'};
+}
+function bioB(s,w){
+  const sum=summaryRound(s);
+  if(s<='2026-11-23')return {d:'세트 1회독 하루 1단원 — 워크북 빈칸·OX → TB → 이동윤 N제 (답지 보며)',x:'이번 주 '+w.B+' · 4h 안에 못 끝내면 일요일 낮으로',l:['nje']};
+  if(s<='2026-11-28')return {d:'세트 하루 2단원 → 1회독 끝 11/28',x:'세트 24~35',l:['nje']};
+  if(s<='2026-12-19')return {d:'세 권 2회독 · 가리고 (N제는 1회독 표시분만) 2.5h',x:sum+' 1.5h',l:['nje','sum']};
+  if(s<='2026-12-24')return {d:'3회독 오답만 (오답 2개 이상 = 개념 리스트 후보)',x:sum+' 1.5h',l:['nje','sum']};
+  if(s<='2027-01-03')return {d:'오답 개념 2.5h',x:sum+' 1.5h',l:['sum']};
+  return {d:'개념 리스트 완벽 (1/7까지)',x:sum,l:['sum']};
+}
+function hanui(s,w){
+  if(MOCKS[s])return {d:MOCKS[s]+' — 실전 시간 그대로 → 채점 (찍어 맞힌 것도 오답) → 오답마다 원문카드 위치에 표시',x:'다음 날 첫 30분 = 오늘 오답',l:['hsum']};
+  if(s<='2026-11-10')return {d:'생리 강의 2.5h (1.5배속 · 하루 3강'+(s>='2026-11-09'?', 오늘은 3h':'')+') + 강의 직후 _복습.pdf · OUTPUT 1.5h',x:'이번 주 '+w.H,l:['hsum']};
+  if(s<='2026-11-12')return {d:'생리학 빈칸 문제집 4h',x:'',l:[]};
+  if(s<='2026-11-26')return {d:'원론 강의 2h (하루 3~4강) · 원문카드 1회독 2h',x:'원문카드: OUTPUT 출제 표시 따라 읽기 → 같은 범위 집요노트 대조 → 없는 것만 옆에',l:['hsum']};
+  if(s<='2026-12-12')return {d:'원문카드 1회독 4h + 집요노트 대조',x:'1회독 끝 12/11',l:['hsum']};
+  if(s<='2026-12-27'){
+    if(s<'2026-12-14')return {d:'원문카드 2회독 3h (빈칸 가리고)',x:'',l:['hsum']};
+    return {d:'원문카드 2회독 3h (빈칸 가리고) · 기출 재구성 1회독 1h',x:'권지연으로 바꿨으면 → 원문카드 2.5h · 기출 1.5h'+(KWON[s]?' · 오늘 '+KWON[s]:'')+' · 먼저 답 가리고 풀기 → 강의는 2배속, 막힌 문제만 정속 · 오답은 원문카드 위치에 표시',l:['hsum','gichul']};
+  }
+  if(s<='2027-01-03')return {d:'원문카드 3회독 — 오답·출제 표시만 → 개념 리스트',x:'',l:['hsum']};
+  return {d:'원문카드 오답 · 모의 오답 재풀이',x:'',l:['hsum','gichul']};
+}
+function pilsuMin(s){ if(s<'2026-11-02')return 0; if(s<='2026-12-01')return 95; if(s<='2026-12-08')return 65; return 35; }
+function hm(m){m=((m%1440)+1440)%1440;return pad(Math.floor(m/60))+':'+pad(m%60)}
+/* ───────── v7 강의 스프린트 (11/5~11/19): 생리 3일 → 생물 하루 2강 ───────── */
+const SP_BIO={'2026-11-08':1,'2026-11-10':2,'2026-11-11':2,'2026-11-12':2,'2026-11-13':2,'2026-11-15':2,'2026-11-16':2,'2026-11-17':2,'2026-11-18':2,'2026-11-19':1};
+const SP_PHYS={
+ '2026-11-05':['생리 강의 (1.5배속) + 강의 직후 _복습.pdf','생리 강의 이어서','OUTPUT 10주차'],
+ '2026-11-06':['생리 강의 → 완강 목표','생리 강의 → 완강 (남으면 토요일 오전)',''],
+ '2026-11-07':['생리 남은 강의 + 복습 (_복습.pdf)','생리학 빈칸 문제집','OUTPUT FINAL TEST → 1회독 끝']
+};
+const SP_OUT={}; const SP_OUT_OLD={'2026-11-10':'OUTPUT 10주차 앞부분','2026-11-11':'OUTPUT 10주차 끝','2026-11-12':'OUTPUT FINAL TEST 앞부분','2026-11-13':'OUTPUT FINAL TEST 끝 → 1회독 끝','2026-11-16':'OUTPUT 남은 것 (1~2h) → 다 끝났으면 워크북'};
+function sprintFor(s){
+  if(s<'2026-11-05'||s>'2026-11-19')return null;
+  const out=[], p=PIL[s];
+  const pilBlk=(tm)=>{let d,x='마지막 15분 = 백지 + 누적테스트 (1·3·7일 전)';
+    if(p&&p.t)d='운동하며 '+p.l+' · '+p.t; else if(p&&p.l==='주간테스트'){d='1주 범위 누적 테스트 · 막힌 항목은 ★';x='';} else d='운동하며 ★ 항목 순환';
+    return {id:'pil',tm:tm,n:'운동 + 필수암기 '+(p?p.l:''),tag:['pil','2h · 운동 1h + 암기'],d:d,x:x,l:['pil']};};
+  const am={id:'am',tm:'07:00–07:20',n:'☀ 백지인출 + 확인',tag:['etc','순공 밖 · 20분'],d:'아침 PDF 1쪽 — 어제 오답개념을 안 보고 1~2줄씩 쓰기 → 빈 곳만 채우기'+(s<='2026-11-13'?' · 토익 P5 30문항 10분':''),x:'스프린트 동안 아침 복습문제(40분)는 선택 — 시간 없으면 건너뛰기'};
+  const pm=(tm,bed)=>({id:'odapPM',tm:tm,n:'🌙 하루 마무리 정리',tag:['etc','순공 밖 · 20분'],d:'오늘 헷갈린 것·핵심만 1장 (= 내일 아침 백지 목록)',x:'20분에서 끊기 · 취침 '+bed});
+  /* v7.1: 11/9 생리 완강일 */
+  if(s==='2026-11-09'){
+    out.push({id:'P1',tm:'08:00–10:30',n:'① 생리 24·25·26강',tag:['han','2.5h'],d:'1.5배속 · 강의 직후 _복습.pdf',x:'1시간 + 10~20분 휴식',l:['hsum']});
+    out.push({rest:1,tm:'10:30–11:00',n:'쉬기'});
+    out.push({id:'P2',tm:'11:00–13:30',n:'② 생리 27·28·29강',tag:['han','2.5h'],d:'점심 먹으면서 들어도 OK'});
+    {const pb=pilBlk('13:30–15:00');pb.tag=['pil','1.5h · 운동 + 암기'];out.push(pb);}
+    out.push({id:'P3',tm:'15:00–17:30',n:'③ 생리 30·31·32강 → 완강 🎉',tag:['han','2.5h'],d:'생리학 32강 완강',x:'늦어지면 휴식은 줄이지 말고 끝 시간만 뒤로'});
+    out.push({id:'O1',tm:'17:30–20:00',n:'④ 한의학 OUTPUT 9주차',tag:['han','2~2.5h'],d:'남은 절반 → 9주차 끝',x:'생리 직후라 복습 효과 · 못 끝내면 내일 첫 블록으로'});
+    out.push(pm('20:00–20:20','일찍'));
+    return {kind:'sprintPhys71',rows:out};
+  }
+  /* 생리 3일 */
+  if(SP_PHYS[s]){
+    const c=SP_PHYS[s];
+    out.push(am);
+    out.push({id:'P1',tm:'07:20–11:50',n:'① 생리학',tag:['han','4h'],d:c[0],x:'1시간 + 10분 휴식',l:['hsum']});
+    out.push({rest:1,tm:'11:50–12:35',n:'점심 · 쉬기'});
+    out.push(pilBlk('12:35–14:35'));
+    out.push({id:'P2',tm:'14:35–19:05',n:'② 생리학',tag:['han','4h'],d:c[1],x:s==='2026-11-07'?'빈칸은 가리고 풀기 → 틀린 곳만 강의·복습 PDF로':''});
+    if(s==='2026-11-06'){
+      out.push({id:'pmc',tm:'19:05–19:10',n:'저녁 체크',tag:['etc','5분'],d:'남은 생리 강의 수 적기 → 토요일 오전에'});
+      out.push({rest:1,tm:'19:10~',n:'가족식사 · 저녁 휴식 (공부 금지)'});
+      return {kind:'sprintPhys',rows:out};
+    }
+    out.push({rest:1,tm:'19:05–19:50',n:'저녁 · 쉬기'});
+    out.push({id:'P3',tm:'19:50–22:00',n:'③ '+(c[2].indexOf('OUTPUT')>-1?'한의학 OUTPUT':'생리학'),tag:['han','2h'],d:c[2],x:'OUTPUT은 11/10 마감분 — 생리 기간에 끝내기'});
+    out.push(pm('22:00–22:20','22:30'));
+    return {kind:'sprintPhys',rows:out};
+  }
+  /* 11/14 토익 준비일 */
+  if(s==='2026-11-14'){
+    out.push(am);
+    out.push({id:'T1',tm:'08:00–12:00',n:'토익 준비',tag:['etc','4h'],d:'실전 감각 — RC 시간 재고 풀기 · P5 오답 자료',x:'새 문제는 오늘까지만'});
+    out.push({rest:1,tm:'12:00–12:45',n:'점심 · 쉬기'});
+    out.push(pilBlk('12:45–14:45'));
+    out.push({id:'C1',tm:'14:45–19:00',n:'따라잡기',tag:['bio','4h'],d:'11/9 못 들은 생물 강의 · 11/10~13 빠진 워크북 단원 (새 진도 없음)',x:'남은 회분은 11/19 버퍼로'});
+    out.push({rest:1,tm:'19:00~',n:'저녁 이후 가볍게 · 일찍 자기 (내일 토익)'});
+    return {kind:'sprintToeic',rows:out};
+  }
+  /* 생물 */
+  const n=SP_BIO[s]; if(!n)return null;
+  if(s==='2026-11-08'){
+    out.push({id:'L1',tm:'08:00–13:00',n:'생물 강의 1강 (4회분)',tag:['bio','5h'],d:'통합이론 1회독 · 1.25~1.5배속',x:'일요일이라 1강만'});
+    out.push({rest:1,tm:'13:00–13:45',n:'점심 · 쉬기'});
+    out.push(pilBlk('13:45–15:45'));
+    out.push({id:'W',tm:'15:45–16:45',n:'워크북',tag:['bio','1h'],d:'오늘 들은 단원 빈칸·OX (답지 보며 역방향)',l:[]});
+    out.push({id:'sun2',tm:'16:45–17:00',n:'주간 점검 10분',tag:['etc','점검'],d:'생리 완강·OUTPUT 끝났는지 체크 → 남은 것만 다음 주 빈 시간에'});
+    out.push({id:'rest',tm:'저녁',n:'휴식',tag:['etc','휴식'],d:'공부 금지 — 이것도 계획의 일부'});
+    return {kind:'sprintSun',rows:out};
+  }
+  if(s==='2026-11-15'){
+    out.push({id:'toeic',tm:'오전',n:'토익 응시 — 본 시험 · 최선',tag:['etc','토익'],d:'아침 15분 내 Part 5 오답 자료만 (새 문제 금지)'});
+    out.push({rest:1,tm:'12:30–13:30',n:'점심 · 쉬기'});
+    out.push({id:'L1',tm:'13:30–18:00',n:'생물 강의 ①',tag:['bio','4h'],d:'통합이론 1회독 · 1.5배속 권장'});
+    out.push({rest:1,tm:'18:00–18:45',n:'저녁 · 쉬기'});
+    out.push({id:'L2',tm:'18:45–23:15',n:'생물 강의 ②',tag:['bio','4h'],d:'2강 마무리',x:'다 못 들은 회분은 11/19 버퍼로 · 워크북·필수암기 주간테스트는 내일 아침으로'});
+    out.push(pm('23:15–23:35','23:45'));
+    return {kind:'sprintToeicDay',rows:out};
+  }
+  out.push(am);
+  if(s==='2026-11-19'){
+    out.push({id:'L1',tm:'07:20–11:50',n:'① 생물 강의 마지막 1강 (버퍼)',tag:['bio','4h'],d:'남은 회분 전부 → 생물 강의 완강',x:'남은 게 없으면 워크북 남은 단원'});
+    out.push({rest:1,tm:'11:50–12:35',n:'점심 · 쉬기'});
+    out.push(pilBlk('12:35–14:35'));
+    out.push({id:'M',tm:'14:35–19:05',n:'② 모의① 원준 생리',tag:['han','실전'],d:'실전 시간 그대로 → 채점 (찍어 맞힌 것도 오답) → 오답마다 원문카드 위치에 표시',x:'내일 첫 30분 = 오늘 오답',l:['hsum']});
+    out.push({rest:1,tm:'19:05–19:50',n:'저녁 · 쉬기'});
+    out.push({id:'W',tm:'19:50–22:00',n:'③ 워크북',tag:['bio','2h'],d:'남은 단원 빈칸·OX',l:[]});
+    out.push(pm('22:00–22:20','22:30'));
+    return {kind:'sprintEnd',rows:out};
+  }
+  out.push({id:'L1',tm:'07:20–11:50',n:'① 생물 강의',tag:['bio','4h'],d:'통합이론 2강 중 앞부분 · 1시간 + 10분 휴식',x:s==='2026-11-16'?'어제 못 들은 회분 있으면 먼저':''});
+  out.push({rest:1,tm:'11:50–12:35',n:'점심 · 쉬기'});
+  out.push(pilBlk('12:35–14:35'));
+  out.push({id:'L2',tm:'14:35–19:05',n:'② 생물 강의',tag:['bio','4h'],d:'이어서'});
+  out.push({rest:1,tm:'19:05–19:50',n:'저녁 · 쉬기'});
+  out.push({id:'L3',tm:'19:50–22:00',n:'③ 생물 강의',tag:['bio','2h'],d:'2강(8회분) 마무리',x:'넘치면 1.25~1.5배속'});
+  if(SP_OUT[s])out.push({id:'O',tm:'22:10–00:20',n:'④ 한의학 OUTPUT (v7.1)',tag:['han','2h'],d:SP_OUT[s],x:'워크북 2h 자리 · 빠진 워크북 단원은 11/14 따라잡기에서 먼저'});
+  else out.push({id:'W',tm:'22:10–00:20',n:'④ 워크북',tag:['bio','2h'],d:'오늘 들은 2단원 빈칸·OX (답지 보며 역방향)',x:'같은 날 꺼내 보기 = 이 방식의 핵심',l:[]});
+  out.push(pm('00:20–00:40','00:45'));
+  return {kind:'sprint',rows:out};
+}
+function blocksFor(s){
+  const sp=sprintFor(s); if(sp)return sp;
+  const w=weekOf(s), dow=parse(s).getDay(), out=[];
+  const prevMock=MOCKS[addDays(s,-1)];
+  if(SUN_STUDY[s]){
+    const p=PIL[s], B=bioB(s,w);
+    if(TOEIC[s])out.push({id:'toeic',tm:'오전',n:TOEIC[s],tag:['etc','토익'],d:'전날·아침 15분 내 Part 5 오답 자료만 (새 문제 금지)',x:'응시 끝나면 점심 먹고 13:00부터 공부'});
+    else out.push({id:'A',tm:'08:00–12:30',n:'생물 A',tag:['bio','4h'],d:bioA(s,w).d,x:bioA(s,w).x});
+    out.push({rest:1,tm:'12:15–13:00',n:'점심 · 쉬기'});
+    out.push({id:'pil',tm:'13:00–14:30',n:'운동 + 필수암기 '+(p?p.l:''),tag:['pil','1.5h · 운동하며'],d:p?'1주 범위 누적 테스트 · 막힌 항목은 ★':'운동하며 ★ 항목 순환',l:['pil']});
+    out.push({id:'B',tm:'14:30–19:00',n:'생물 B (금요일 저녁분)',tag:['bio','4h · 아웃풋 → 써머리'],d:B.d,x:'금요일 저녁 가족식사로 옮겨 온 블록',l:B.l});
+    out.push({rest:1,tm:'19:00–19:45',n:'저녁 · 쉬기'});
+    out.push({id:'sun1',tm:'19:45–22:45',n:'밀린 것 따라잡기',tag:['etc','3h · 따라잡기'],d:'새 진도 없음 · 이번 주 체크 안 된 칸만 (진도 탭 빨간 점선부터)'});
+    out.push({id:'sun2',tm:'22:45–22:55',n:'주간 점검 10분',tag:['etc','점검'],d:'이번 주 진도 체크 → 안 된 칸만 다음 주로'});
+    out.push({id:'odapPM',tm:'22:55–23:25',n:'🌙 하루 마무리 정리',tag:['etc','순공 밖 · 30분'],d:'오늘 헷갈린 것·핵심만 1장으로 정리 (= 내일 아침 백지에 쓸 목록)',x:'완벽하게 X · 30분에서 끊기'});
+    return {kind:'sunStudy',rows:out};
+  }
+  if(dow===0){
+    const p=PIL[s];
+    out.push({id:'sun1',tm:'낮',n:'밀린 것 따라잡기',tag:['etc','따라잡기'],d:'새 진도 없음 · 이번 주 체크 안 된 칸만',x:TOEIC[s]?TOEIC[s]+' — 오늘은 따라잡기 대신 응시':''});
+    if(p)out.push({id:'pil',tm:'낮',n:'운동 + 필수암기 '+p.l,tag:['pil','1.5h · 운동하며'],d:'1주 범위 누적 테스트 · 막힌 항목은 ★',x:TOEIC[s]&&TOEIC[s].indexOf('응시')>-1?'토익 응시 뒤 오후에':'',l:['pil']});
+    else out.push({id:'pil',tm:'낮',n:'운동',tag:['pil','1.5h'],d:'운동 1h+ · 남는 시간 쉬기'});
+    if(TOEIC[s])out.push({id:'toeic',tm:'',n:TOEIC[s],tag:['etc','토익'],d:'전날·아침 15분 내 Part 5 오답 자료만 (새 문제 금지)'});
+    if(s==='2026-12-06')out.push({id:'gich',tm:'낮',n:'기출 샘플 30분 — 재구성 vs 권지연 결정',tag:['han','30분 · v6.3'],d:'재구성 기출 음양·오행 몇 문제 풀어 보기 → ① 원문카드 범위와 안 맞음 ② 해설이 부실해 왜 답인지 안 보임 ③ 최근 경향이 빠짐 — 하나라도 크면 권지연 강의+교재 이번 주 주문',x:'12/14 기출 1회독 시작에 맞추기 (교재 배송 기간 고려)',l:['gichul']});
+    if(KWON[s])out.push({id:'gich',tm:'낮',n:'(권지연으로 바꿨으면) '+KWON[s],tag:['han','따라잡기'],d:'먼저 답 가리고 풀기 → 강의는 막힌 문제 위주로',l:['gichul']});
+    out.push({id:'sun2',tm:'낮',n:'주간 점검 10분',tag:['etc','점검'],d:'이번 주 진도 체크 → 안 된 칸만 다음 주로'});
+    out.push({id:'rest',tm:'저녁',n:'휴식',tag:['etc','휴식'],d:'공부 금지 — 이것도 계획의 일부'});
+    return {kind:'sun',rows:out};
+  }
+  const pm=pilsuMin(s);
+  const am={id:'am',tm:'07:00–07:20',n:'☀ 백지인출 + 확인',tag:['etc','순공 밖 · 20분'],d:'아침 PDF 1쪽 — 어제 오답개념(B번호)을 안 보고 핵심 1~2줄씩 쓰기 10분 → 오답노트·해설·학습지로 빈 곳만 채우기 10분'+(between(s,'2026-11-02','2026-11-14')||between(s,'2026-11-16','2026-11-23')?' · 토익 P5 30문항 10분 → 오답만 (20분'+(s>'2026-11-15'?' · 피곤하면 10분 · 11/24 성적 보고 계속/중단':'')+')':''),x:'못 쓴 B번호는 적어 두기 · ⚠️ 마법 목록부터'};
+  if(prevMock)am.x='오늘 첫 30분 = 어제 '+prevMock.split(' ')[0]+' 오답';
+  out.push(am);
+  out.push({id:'odapAM',tm:'07:20–08:00',n:'아침 복습문제',tag:['etc','순공 밖 · 40분'],d:'복습문제 30분 → 채점 → 틀린 번호 + "백지 못 씀: B○" 함께 보내기',x:'찍어서 맞힌 것도 오답 · 새 진도 금지'});
+  let t=8*60; const blk=270;
+  const A=bioA(s,w);
+  out.push({id:'A',tm:hm(t)+'–'+hm(t+blk),n:'① 생물 A',tag:['bio','4h · 인풋, 머리 맑을 때'],d:A.d,x:A.x}); t+=blk;
+  out.push({rest:1,tm:hm(t)+'–'+hm(t+45),n:'점심 · 쉬기'}); t+=45;
+  const num=3;
+  {
+    const p=PIL[s];
+    let d,x='';
+    if(pm===0){d='운동 1h+ · 필수암기는 11/2(월) 시작';x='오늘은 운동에만 집중 · 남는 시간은 쉬기';}
+    else if(p&&p.t){d='운동하며 '+p.l+' · '+p.t;x='운동 중 = 보고 소리 내 외우기 · 마지막 15분 = 백지 + 누적테스트 (1·3·7일 전)';}
+    else if(p){d='운동하며 '+p.l;x='1~4주 재테스트 → ★ 회독';}
+    else {d='운동하며 ★ 항목 순환';x='주 1회 전체 재테스트';}
+    if(MOCKS[s]&&p)x='모의 날 → 필수암기는 누적테스트만';
+    out.push({id:'pil',tm:hm(t)+'–'+hm(t+90),n:'② 운동 + 필수암기',tag:['pil','1.5h · 운동 1h + 암기'],d:d,x:x,l:pm?['pil']:[]}); t+=90;
+  }
+  const H=hanui(s,w);
+  out.push({id:'H',tm:hm(t)+'–'+hm(t+blk),n:(num===3?'③':'②')+' 한의학',tag:['han','4h'+(s<='2026-11-10'?' · 생리 강의는 교대표 12–15 안':'')],d:H.d,x:H.x,l:H.l}); t+=blk;
+  if(FRI_REST[s]){
+    out.push({id:'pm',tm:hm(t)+'–'+hm(t+5),n:'저녁 체크',tag:['etc','5분'],d:'체크 · 틀린 번호 오른쪽 칸에 적기 · 생물 B는 일요일로'});
+    out.push({rest:1,tm:hm(t+5)+'~',n:FRI_REST[s]+' · 저녁 휴식 (공부 금지) — 생물 B는 일요일 14:30로 이월'});
+    return {kind:'friRest',rows:out};
+  }
+  out.push({rest:1,tm:hm(t)+'–'+hm(t+45),n:'저녁 · 쉬기'}); t+=45;
+  const B=bioB(s,w);
+  out.push({id:'B',tm:hm(t)+'–'+hm(t+blk),n:(num===3?'④':'③')+' 생물 B',tag:['bio','4h · 아웃풋 → 써머리'],d:B.d,x:B.x,l:B.l}); t+=blk;
+  out.push({id:'pm',tm:hm(t)+'–'+hm(t+5),n:'저녁 체크',tag:['etc','5분'],d:'체크 · 틀린 번호 오른쪽 칸에 적기 · 내일 첫 일 정하기'});
+  out.push({id:'odapPM',tm:hm(t+5)+'–'+hm(t+35),n:'🌙 하루 마무리 정리',tag:['etc','순공 밖 · 30분'],d:'오늘 배운 것 중 헷갈린 것·핵심만 1장으로 정리 (= 내일 아침 백지에 쓸 목록) → 강의 직후 오답 있으면 보내기',x:'완벽하게 X · 30분에서 끊기 · 취침 '+hm(t+35)});
+  return {kind:MOCKS[s]?'mock':'day',rows:out};
+}
+
+/* ───────── 저장 (db 동기화 + 로컬 사본) ───────── */
+let DB=null, DL=null, online=false;
+let PROG={cells:{},concept:0};
+const DAYS={}; // date -> {checks:{},memo:'',wrong:''}
+const LS='sung-desk-v1';
+function lsLoad(){try{const o=JSON.parse(localStorage.getItem(LS)||'null');if(o){PROG=o.p||PROG;Object.assign(DAYS,o.d||{});}}catch(e){}}
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify({p:PROG,d:DAYS}))}catch(e){}
+  try{const k='sung-desk-bk',o=JSON.parse(localStorage.getItem(k)||'{}'),t=iso(new Date());if(!o[t]){o[t]={p:PROG,d:DAYS};Object.keys(o).sort().slice(0,-7).forEach(x=>delete o[x]);localStorage.setItem(k,JSON.stringify(o));}}catch(e){}}
+lsLoad();
+const dayKey=s=>'d'+s;
+function day(s){return DAYS[s]||(DAYS[s]={checks:{},memo:'',wrong:'',vow:''});}
+const queues={};
+function write(path,data){
+  lsSave();
+  if(!DB)return Promise.resolve();
+  const q=queues[path]||Promise.resolve();
+  const p=q.then(()=>DB.doc(path).set(data)).then(()=>{setSync('on','동기화됨 · '+hm(new Date().getHours()*60+new Date().getMinutes()));},e=>{setSync('err',errMsg(e));});
+  queues[path]=p.catch(()=>{});
+  return p;
+}
+function errMsg(e){const c=e&&e.code;if(c==='quota_exceeded')return '저장 공간이 꽉 찼어요. 오래된 정리를 지워 주세요.';if(c==='revoked')return '연결이 끊겼어요. 새로고침해 주세요.';return '저장 실패 — 이 기기에는 남아 있어요. 잠시 뒤 다시 저장됩니다.';}
+function setSync(cls,txt){const el=document.getElementById('sync');el.className='sync '+(cls||'');el.querySelector('span').textContent=txt;}
+function saveDay(s){const d=day(s);d.updated=Date.now();return write('desk/'+dayKey(s),{date:s,checks:d.checks,memo:d.memo,wrong:d.wrong,vow:d.vow||'',ex:!!d.ex,updated:d.updated});}
+function saveProg(){PROG.updated=Date.now();return write('desk/progress',{cells:PROG.cells,concept:PROG.concept||0,updated:PROG.updated});}
+
+/* ───────── 화면 ───────── */
+const $=id=>document.getElementById(id);
+let SEL=TODAY;
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function chipLinks(l){return (l||[]).map(k=>SITE[k]?'<a class="chip" href="'+SITE[k].u+'" target="_blank" rel="noopener">'+esc(SITE[k].t)+' ↗</a>':'').join('')}
+
+function renderDD(){
+  const items=[['생물 강의 완강','2026-11-18'],['필수암기 1회독','2026-12-01'],['개념 리스트','2026-12-31'],['최종 버퍼','2027-01-07']];
+  $('dd').innerHTML=items.map(([n,d])=>{const k=diff(TODAY,d);return '<div class="d'+(k<0?' done':'')+'"><span>'+n+' · '+md(d)+'</span><b>'+(k>0?'D-'+k:k===0?'D-day':'지남')+'</b></div>'}).join('');
+  const w=weekOf(TODAY);
+  $('sub').textContent='마스터플랜 v7.2 · 생물 하루 2강 + 워크북 2h + 필수암기 2h (우선순위: 인강 > 워크북 = 필수암기 > OUTPUT · OUTPUT은 틈틈이 자율) · 11/20~ v6.4 순공 12h (생물 A 4 · 생물 B 4 · 한의학 4) + 운동·필수암기 1.5h + 아침 복습 1h · 마무리 정리 30분 (순공 밖) · 지금 '+w.k+' ('+md(w.s)+'~'+md(w.e)+')'+(TODAY<WEEKS[0].s?' · 10/29부터 적용':'');
+}
+
+function renderDay(){
+  const s=SEL, b=blocksFor(s), d=day(s), w=weekOf(s);
+  const dk=diff(s,'2026-12-31');
+  $('dayTitle').innerHTML=esc((s===TODAY?'오늘 · ':'')+mdw(s))+' <span class="dday">12/31까지 '+(dk>0?'D-'+dk:dk===0?'D-day':'D+'+(-dk))+'</span>';
+  $('sideTitle').textContent=(s===TODAY?'오늘':mdw(s))+' 정리';
+  let ban='';
+  if(s<WEEKS[0].s)ban='<div class="banner">v6는 10/29(목)부터 적용돼요. 오늘은 계획을 미리 보는 날.</div>';
+  else if(b.kind==='sprintPhys')ban='<div class="banner">v7 강의 스프린트 · 생리 3일 — 생리 완강·복습 + OUTPUT 10주차·FINAL (11/10 마감분)'+(s==='2026-11-06'?' · 오늘 저녁은 가족식사 휴식':'')+'</div>';
+  else if(b.kind==='sprintPhys71')ban='<div class="banner">v7.1 · 오늘 생리 24~32강 완강! 3강씩 3블록 → 저녁 OUTPUT 9주차. 밤에 메우지 않기.</div>';
+  else if(b.kind==='sprint'&&SP_OUT[s])ban='<div class="banner">v7.1 · 생물 하루 2강 + 워크북 자리에 OUTPUT ('+esc(SP_OUT[s])+'). 넘치면 배속, 밤 늦게 메우지 않기.</div>';
+  else if(b.kind==='sprint'&&s>='2026-11-10')ban='<div class="banner">v7.2 · 생물 하루 2강 + 그날 워크북 2h + 필수암기 2h. 우선순위 인강 > 워크북 = 필수암기 > OUTPUT — OUTPUT은 틈틈이 자율. 밤 늦게 메우지 않기.</div>';
+  else if(b.kind==='sprint')ban='<div class="banner">v7 강의 스프린트 · 생물 하루 2강 + 그날 워크북 — 11/18 완강 목표. 넘치면 배속, 밤 늦게 메우지 않기.</div>';
+  else if(b.kind==='sprintSun')ban='<div class="banner sun">일요일 — 생물 1강 + 워크북 1h + 필수암기 주간테스트 → 저녁은 쉬기.</div>';
+  else if(b.kind==='sprintToeic')ban='<div class="banner">토익 준비일 — 새 생물 진도 없음. 내일 시험이니 일찍 자기.</div>';
+  else if(b.kind==='sprintToeicDay')ban='<div class="banner">토익 본 시험 → 오후부터 생물 2강. 못 들은 회분은 11/19 버퍼로.</div>';
+  else if(b.kind==='sprintEnd')ban='<div class="banner mock">스프린트 마지막 날 — 생물 강의 완강 + 모의① 원준 생리.</div>';
+  else if(between(s,'2026-11-20','2026-11-29'))ban='<div class="banner">11/20 이후는 아직 v6.4 기준 참고용이에요 — 원론·원문카드·TB·N제 순서는 11/15 주간 점검 때 정해요.</div>';
+  else if(b.kind==='friRest')ban='<div class="banner sun">이번 주 금요일 저녁 = '+esc(FRI_REST[s])+' · 휴식. 한의학 블록까지만 하고 저녁은 쉬기 — 생물 B는 일요일(11/8)로.</div>';
+  else if(b.kind==='sunStudy')ban='<div class="banner">이번 주 일요일은 공부하는 날 — '+(TOEIC[s]?'토익 응시':'생물 A (토익 취소 · v6.4)')+' → 금요일에 옮겨 온 생물 B → 밀린 것 따라잡기 + 주간 점검. 저녁 휴식은 금요일에 미리 했어요.</div>';
+  else if(b.kind==='sun')ban='<div class="banner sun">일요일 — 낮엔 따라잡기만, 저녁은 쉬기.</div>';
+  else if(b.kind==='mock')ban='<div class="banner mock">'+esc(MOCKS[s])+' 날 — 한의학 블록이 모의고사로 바뀌어요.</div>';
+  $('dayBanner').innerHTML=ban?ban+'<div style="height:8px"></div>':'';
+  let tot=0,done=0;
+  $('rows').innerHTML=b.rows.map(r=>{
+    if(r.rest)return '<div class="row rest"><span></span><span class="tm">'+r.tm+'</span><span>'+esc(r.n)+'</span></div>';
+    tot++; const on=!!d.checks[r.id]; if(on)done++;
+    return '<div class="row'+(on?' done':'')+'"><input type="checkbox" id="c-'+r.id+'" data-id="'+r.id+'"'+(on?' checked':'')+' aria-label="'+esc(r.n)+' 완료"><label class="tm" for="c-'+r.id+'">'+esc(r.tm)+'</label><div><div class="nm">'+esc(r.n)+(r.tag?'<span class="tag '+r.tag[0]+'">'+esc(r.tag[1])+'</span>':'')+'</div><div class="det">'+esc(r.d)+(r.x?'<small>'+esc(r.x)+'</small>':'')+'</div>'+(r.l&&r.l.length?'<div class="chips">'+chipLinks(r.l)+'</div>':'')+'</div></div>';
+  }).join('');
+  $('doneTxt').textContent=done+' / '+tot+' 완료';
+  $('doneBar').style.width=(tot?Math.round(done/tot*100):0)+'%';
+  $('wkTitle').textContent=w.k+' 목표 · '+md(w.s)+'~'+md(w.e);
+  $('wkGrid').innerHTML=[['bio','생물 A · 강의 → 시냅스',w.A],['bio','생물 B · 세트 / 회독',w.B],['bio','써머리',w.S],['han','한의학',w.H],['etc','모의 · 토익',w.M]].map(x=>'<div class="wk '+x[0]+'"><b>'+x[1]+'</b>'+esc(x[2])+'</div>').join('');
+  const me=document.activeElement;
+  if(me!==$('memo'))$('memo').value=d.memo||'';
+  if(me!==$('wrong'))$('wrong').value=d.wrong||'';
+  $('vowTitle').textContent=(s===TODAY?'오늘':mdw(s))+'의 다짐';
+  if(me!==$('vow'))$('vow').value=d.vow||'';
+  const yv=((DAYS[addDays(s,-1)]||{}).vow||'').trim();
+  $('vow').placeholder=yv?'어제: '+yv:'예) 오늘은 생물 A 4시간 끝까지 앉아 있는다.';
+}
+$('rows').addEventListener('change',e=>{const id=e.target.dataset&&e.target.dataset.id;if(!id)return;const d=day(SEL);if(e.target.checked)d.checks[id]=true;else delete d.checks[id];if(id==='pil'&&e.target.checked&&SEL<=TODAY)d.ex=true;renderDay();renderCal();saveDay(SEL);if(SEL===TODAY)renderNotes();});
+$('prevDay').onclick=()=>{SEL=addDays(SEL,-1);renderDay()};
+$('nextDay').onclick=()=>{SEL=addDays(SEL,1);renderDay()};
+$('todayBtn').onclick=()=>{SEL=TODAY;renderDay()};
+
+/* 정리 바 */
+let memoT=null;
+function memoInput(){const d=day(SEL);d.memo=$('memo').value;d.wrong=$('wrong').value;$('saved').textContent='입력 중…';lsSave();clearTimeout(memoT);const s=SEL;memoT=setTimeout(()=>{saveDay(s).then(()=>{$('saved').textContent=DB?'저장됨 (모든 기기)':'이 기기에 저장됨';});renderNotes();},900);}
+$('memo').addEventListener('input',memoInput);$('wrong').addEventListener('input',memoInput);
+let vowT=null;
+$('vow').addEventListener('input',()=>{const d=day(SEL);d.vow=$('vow').value;$('vowSaved').textContent='입력 중…';lsSave();clearTimeout(vowT);const s=SEL;vowT=setTimeout(()=>{saveDay(s).then(()=>{$('vowSaved').textContent=DB?'저장됨 (모든 기기)':'이 기기에 저장됨';});renderNotes();},900);});
+function toast(t){const el=$('toast');el.textContent=t;el.classList.add('on');setTimeout(()=>el.classList.remove('on'),1600)}
+async function copy(t){try{await navigator.clipboard.writeText(t);toast('복사했어요')}catch(e){toast('복사가 막혔어요. 직접 선택해서 복사해 주세요.')}}
+$('copyWrong').onclick=()=>{const d=day(SEL);copy(md(SEL)+' 틀린 번호: '+(d.wrong||'(없음)'))};
+
+/* 사이트 */
+function renderSites(){$('sites').innerHTML=SITES.map(s=>'<a class="site" href="'+s.u+'" target="_blank" rel="noopener"><span class="t">'+esc(s.t)+'</span><span class="u">'+esc(s.d)+'</span><span class="u">언제: '+esc(s.w)+'</span><span class="go">열기 ↗</span></a>').join('')}
+
+/* 계획 */
+function renderPlan(){
+  const cw=weekOf(TODAY);
+  $('planBody').innerHTML=WEEKS.map(w=>'<tr class="'+(w===cw&&TODAY>=WEEKS[0].s?'cur':'')+'"><td class="w">'+w.k+'<small>'+md(w.s)+'~'+(w.k==='1월'?'시험':md(w.e))+'</small></td><td>'+esc(w.A)+'</td><td>'+esc(w.B)+'</td><td>'+esc(w.S)+'</td><td>'+esc(w.H)+'</td><td>'+esc(w.M)+'</td></tr>').join('');
+  let nextSet=false;
+  $('ms').innerHTML=MILES.map(([d,t])=>{const k=diff(TODAY,d);let c='',st;if(k<0){c='past';st='지남'}else{st=k===0?'오늘':'D-'+k;if(!nextSet){c='next';nextSet=true}}return '<div class="m '+c+'"><span class="when">'+mdw(d)+'</span><span>'+esc(t)+'</span><span class="st">'+st+'</span></div>'}).join('');
+}
+
+/* 진도 */
+const range=(a,b)=>{const r=[];for(let i=a;i<=b;i++)r.push(String(i));return r};
+const TRACKS=[
+ {k:'lec',t:'생물 강의 (46강 완강 11/18)',c:range(22,46),tgt:w=>w.lec},
+ {k:'wb1',t:'워크북 1회독 (세트 · 35단원)',c:range(1,35),tgt:w=>w.set},
+ {k:'tb1',t:'TB 1회독 (세트)',c:range(1,35),tgt:w=>w.set},
+ {k:'nj1',t:'이동윤 N제 1회독 (세트)',c:range(1,35),tgt:w=>w.set},
+ {k:'wb2',t:'워크북 2회독 (가리고 · 11/30~12/19)',c:range(1,35)},
+ {k:'tb2',t:'TB 2회독',c:range(1,35)},
+ {k:'nj2',t:'N제 2회독 (1회독 표시분만)',c:range(1,35)},
+ {k:'syn',t:'시냅스 7.0 회독 (목표 5회독)',c:range(1,5)},
+ {k:'sum',t:'써머리 회독 (5회)',c:range(1,5)},
+ {k:'out',t:'한의학 OUTPUT',c:['7','8','9','10','F']},
+ {k:'phy',t:'생리 강의 (32강 · 11/9 완강)',c:range(1,32)},
+ {k:'won',t:'원론 강의 (36강 · 11/26 완강)',c:range(1,36)},
+ {k:'card',t:'원문카드 회독',c:range(1,3)},
+ {k:'mock',t:'모의고사 8회',c:['①','②','③','④','⑤','⑥','⑦','⑧']}
+];
+function wkCells(k,wk){const r=(WR[wk.k]||{})[k];if(!r)return [];if(typeof r[0]==='number'){const a=[];for(let i=r[0];i<=r[1];i++)a.push(String(i));return a;}return r;}
+function wkLabel(k,wk){const r=(WR[wk.k]||{})[k];if(!r)return '';if(typeof r[0]==='number')return r[0]===r[1]?String(r[0]):r[0]+'~'+r[1];return r.join('·');}
+function renderProg(){
+  const w=weekOf(TODAY), live=TODAY>=WEEKS[0].s;
+  $('pg').innerHTML=TRACKS.map(tr=>{
+    const n=tr.c.filter(c=>PROG.cells[tr.k+':'+c]).length;
+    const cur=new Set(live?wkCells(tr.k,w):[]), late=new Set();
+    if(live)WEEKS.filter(x=>x.e<w.s).forEach(x=>wkCells(tr.k,x).forEach(c=>{if(!cur.has(c))late.add(c)}));
+    const lb=live?wkLabel(tr.k,w):'';
+    let nx='';if(live&&!lb){const nw=WEEKS.find(x=>x.s>w.e&&wkLabel(tr.k,x));if(nw)nx='<em class="wkr nx">이번 주 없음 · '+md(nw.s)+'~ '+esc(wkLabel(tr.k,nw))+'</em>';}
+    return '<div class="pgrow"><h4>'+esc(tr.t)+(lb?'<em class="wkr">이번 주 '+esc(lb)+'</em>':nx)+'<small>'+n+' / '+tr.c.length+'</small></h4><div class="cells">'+tr.c.map(c=>{const key=tr.k+':'+c;const on=!!PROG.cells[key];const t=cur.has(c),l=!on&&late.has(c);return '<button type="button" class="cell'+(on?' on':'')+(t?' tgt':'')+(l?' late':'')+'" data-k="'+key+'" aria-pressed="'+on+'"'+(t?' title="이번 주 범위"':l?' title="지난 범위 · 밀림"':'')+'>'+c+'</button>'}).join('')+'</div></div>';
+  }).join('')+'<div class="pgrow"><h4>생물 개념 리스트<small>목표 200~300</small></h4><div class="num"><input type="number" id="concept" min="0" max="999" value="'+(PROG.concept||0)+'" aria-label="개념 리스트 개수"><span class="sub">/ 300</span></div></div>';
+}
+$('pg').addEventListener('click',e=>{const b=e.target.closest('.cell');if(!b)return;const k=b.dataset.k;if(PROG.cells[k])delete PROG.cells[k];else PROG.cells[k]=true;renderProg();saveProg();});
+let cT=null;$('pg').addEventListener('input',e=>{if(e.target.id!=='concept')return;PROG.concept=Math.max(0,Number(e.target.value)||0);clearTimeout(cT);cT=setTimeout(saveProg,800);});
+
+/* 정리 모음 */
+function notesText(){if(NMODE==='vow')return Object.keys(DAYS).sort().filter(s=>(DAYS[s].vow||'').trim()).map(s=>'■ '+mdw(s)+'  '+DAYS[s].vow.trim()).join('\n');return Object.keys(DAYS).sort().filter(s=>(DAYS[s].memo||'').trim()||(DAYS[s].wrong||'').trim()).map(s=>'■ '+mdw(s)+'\n'+(DAYS[s].memo||'').trim()+((DAYS[s].wrong||'').trim()?'\n틀린 번호: '+DAYS[s].wrong.trim():'')).join('\n\n');}
+let NMODE='memo';
+function renderNotes(){
+  if(NMODE==='vow'){const vs=Object.keys(DAYS).sort().reverse().filter(s=>(DAYS[s].vow||'').trim());$('notes').innerHTML=vs.length?vs.map(s=>{const k=diff(s,'2026-12-31');return '<div class="n vrow"><h4>'+mdw(s)+'<span class="dday hot">🔥 12/31까지 '+(k>0?'D-'+k:k===0?'D-DAY':'D+'+(-k))+'</span></h4><div class="vw">'+esc(DAYS[s].vow.trim())+'</div></div>';}).join(''):'<p class="empty">아직 쓴 다짐이 없어요. 오늘 탭 맨 위 칸에 쓰면 여기 모여요.</p>';return;}
+  const ks=Object.keys(DAYS).sort().reverse().filter(s=>(DAYS[s].memo||'').trim()||(DAYS[s].wrong||'').trim());
+  $('notes').innerHTML=ks.length?ks.map(s=>'<div class="n"><h4>'+mdw(s)+'</h4><pre>'+esc((DAYS[s].memo||'').trim())+'</pre>'+((DAYS[s].wrong||'').trim()?'<div class="w">틀린 번호: '+esc(DAYS[s].wrong.trim())+'</div>':'')+'</div>').join(''):'<p class="empty">아직 정리한 날이 없어요. 오른쪽 정리 바에 쓰면 여기 모여요.</p>';
+}
+$('copyAll').onclick=()=>copy(notesText()||'(정리 없음)');
+document.querySelectorAll('.segb').forEach(b=>b.onclick=()=>{NMODE=b.dataset.m;document.querySelectorAll('.segb').forEach(x=>{const on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-selected',String(on));});renderNotes();});
+$('dlAll').onclick=async()=>{if(!DL)return;const body='<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>공부 데스크 정리 모음</title><style>body{font-family:-apple-system,"Apple SD Gothic Neo",sans-serif;max-width:720px;margin:24px auto;line-height:1.6}h2{font-size:16px;border-bottom:1px solid #ccc;padding-bottom:4px;margin-top:22px}pre{white-space:pre-wrap;font:inherit}.w{color:#b8382b}</style></head><body><h1>공부 데스크 정리 모음</h1>'+Object.keys(DAYS).sort().filter(s=>(DAYS[s].memo||'').trim()||(DAYS[s].wrong||'').trim()).map(s=>'<h2>'+mdw(s)+'</h2><pre>'+esc((DAYS[s].memo||'').trim())+'</pre>'+((DAYS[s].wrong||'').trim()?'<p class="w">틀린 번호: '+esc(DAYS[s].wrong.trim())+'</p>':'')).join('')+'</body></html>';try{await DL.save({filename:'공부데스크_정리모음_'+TODAY+'.html',data:body});}catch(e){toast('파일 받기를 취소했거나 막혔어요')}};
+
+/* 운동 달력 */
+let CM=TODAY.slice(0,7);
+function exStreak(){let s=(DAYS[TODAY]&&DAYS[TODAY].ex)?TODAY:addDays(TODAY,-1),n=0;while(DAYS[s]&&DAYS[s].ex){n++;s=addDays(s,-1);}return n;}
+function renderCal(){
+  const [y,m]=CM.split('-').map(Number),first=new Date(y,m-1,1),nd=new Date(y,m,0).getDate();
+  const tex=!!(DAYS[TODAY]&&DAYS[TODAY].ex);
+  let h='<div class="calh"><button type="button" data-cm="-1" aria-label="이전 달">◀</button><span>운동 체크 · '+y+'년 '+m+'월</span><button type="button" data-cm="1" aria-label="다음 달">▶</button></div><div class="calg">';
+  h+=DN.split('').map(c=>'<span class="dw">'+c+'</span>').join('');
+  for(let i=0;i<first.getDay();i++)h+='<span></span>';
+  let cnt=0;
+  for(let d=1;d<=nd;d++){const s=CM+'-'+pad(d),on=!!(DAYS[s]&&DAYS[s].ex);if(on)cnt++;h+='<button type="button" data-ex="'+s+'" class="'+(on?'ex ':'')+(s===TODAY?'td':'')+'"'+(s>TODAY?' disabled':'')+' aria-pressed="'+on+'" aria-label="'+md(s)+' 운동'+(on?' 함':' 안 함')+'">'+d+'</button>';}
+  h+='</div><div class="calf"><span>이번 달 '+cnt+'일 · 연속 '+exStreak()+'일</span><button type="button" class="btn'+(tex?'':' pri')+'" data-ex="'+TODAY+'">'+(tex?'오늘 운동 ✓':'오늘 운동 했어요')+'</button></div>';
+  $('cal').innerHTML=h;
+}
+$('cal').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.cm){const [y,m]=CM.split('-').map(Number);const nd=new Date(y,m-1+Number(b.dataset.cm),1);CM=nd.getFullYear()+'-'+pad(nd.getMonth()+1);renderCal();return;}const s=b.dataset.ex;if(!s||s>TODAY)return;const d=day(s);if(d.ex)delete d.ex;else d.ex=true;renderCal();saveDay(s);});
+
+/* 스케줄 내보내기 (CSV · 노션 가져오기용) */
+function csvCell(v){v=String(v==null?'':v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function scheduleCsv(){
+  const head=['날짜','요일','주차','시간','블록','구분','할 일','참고','사이트','완료'];
+  const lines=[head.map(csvCell).join(',')];
+  for(let s=WEEKS[0].s;s<='2027-01-31';s=addDays(s,1)){
+    const b=blocksFor(s),d=DAYS[s]||{checks:{}},w=weekOf(s),dw=DN[parse(s).getDay()];
+    b.rows.forEach(r=>{
+      if(r.rest)return;
+      const site=(r.l||[]).map(k=>SITE[k]?SITE[k].t:'').filter(Boolean).join(' / ');
+      lines.push([s,dw,w.k,r.tm,r.n,r.tag?r.tag[1]:'',r.d||'',r.x||'',site,(d.checks||{})[r.id]?'O':''].map(csvCell).join(','));
+    });
+    if((d.memo||'').trim()||(d.wrong||'').trim())lines.push([s,dw,w.k,'','하루 정리','정리',(d.memo||'').trim(),(d.wrong||'').trim()?'틀린 번호: '+d.wrong.trim():'','',''].map(csvCell).join(','));
+  }
+  return '﻿'+lines.join('\r\n');
+}
+$('expCsv').onclick=async()=>{
+  const csv=scheduleCsv(),fn='공부데스크_스케줄_'+TODAY+'.csv';
+  if(DL){try{await DL.save({filename:fn,data:csv,mimeType:'text/csv'});toast('저장했어요');return;}catch(e){}}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=fn;document.body.appendChild(a);a.click();a.remove();toast('내려받기를 시작했어요');}catch(e){copy(csv);}
+};
+
+/* 타이머 (이 기기만) */
+let tState={ph:'study',left:3600,run:false,end:0},tI=null;
+const TK='sung-desk-timer';
+function tCountGet(){try{const o=JSON.parse(localStorage.getItem(TK)||'{}');return o[TODAY]||0}catch(e){return 0}}
+function tCountAdd(){try{const o=JSON.parse(localStorage.getItem(TK)||'{}');o[TODAY]=(o[TODAY]||0)+1;localStorage.setItem(TK,JSON.stringify(o))}catch(e){}}
+function tDraw(){const m=Math.floor(tState.left/60),s=tState.left%60;$('clock').textContent=pad(m)+':'+pad(s);$('phase').textContent=tState.ph==='study'?'공부 1시간':'휴식 10분 — 일어나서 스트레칭';$('tStart').textContent=tState.run?'일시정지':'시작';$('tCount').textContent='오늘 완료한 1시간: '+tCountGet();}
+function tick(){tState.left=Math.max(0,Math.round((tState.end-Date.now())/1000));if(tState.left===0){if(tState.ph==='study'){tCountAdd();tState.ph='rest';tState.left=600;toast('1시간 끝! 10분 쉬어요')}else{tState.ph='study';tState.left=3600;toast('다시 1시간 시작')}tState.end=Date.now()+tState.left*1000;}tDraw();}
+$('tStart').onclick=()=>{if(tState.run){tState.run=false;clearInterval(tI);tick();tState.run=false;}else{tState.run=true;tState.end=Date.now()+tState.left*1000;tI=setInterval(tick,1000);}tDraw();};
+$('tReset').onclick=()=>{clearInterval(tI);tState={ph:'study',left:3600,run:false,end:0};tDraw();};
+
+/* 탭 */
+const VIEWS=['today','study','plan','progress','notes'];
+function route(){let v=(location.hash||'').slice(1);if(VIEWS.indexOf(v)<0)v='today';VIEWS.forEach(x=>$('v-'+x).classList.toggle('on',x===v));document.querySelectorAll('nav.tabs a').forEach(a=>a.classList.toggle('on',a.dataset.v===v));}
+window.addEventListener('hashchange',route);
+
+function renderAll(){renderDD();renderDay();renderSites();renderPlan();renderProg();renderNotes();renderCal();tDraw();}
+$('cheer').textContent=CHEERS[parse(TODAY).getDate()%CHEERS.length];
+route();renderAll();
+setSync('','이 기기에 저장 중 · 동기화 연결 중…');
+
+/* ───────── 백업 ───────── */
+let BACKUPS={}; // id -> data
+function liveDays(){const o={};Object.keys(DAYS).forEach(s=>{const d=DAYS[s];if(d&&((d.memo||'').trim()||(d.wrong||'').trim()||(d.vow||'').trim()||d.ex||Object.keys(d.checks||{}).length))o[s]=d;});return o;}
+function snapshotData(){return {kind:'backup',at:Date.now(),days:JSON.parse(JSON.stringify(liveDays())),prog:JSON.parse(JSON.stringify(PROG||{}))};}
+function bkLabel(id,v){const t=new Date(v.at||0);return (id.indexOf('backup-pre')===0?'되돌리기 직전 · ':'')+(t.getMonth()+1)+'/'+t.getDate()+' '+pad(t.getHours())+':'+pad(t.getMinutes())+' · '+Object.keys(v.days||{}).length+'일치';}
+function renderBk(){
+  const ids=Object.keys(BACKUPS).sort((a,b)=>(BACKUPS[b].at||0)-(BACKUPS[a].at||0));
+  const cur=$('bkSel').value;
+  $('bkSel').innerHTML='<option value="">— 백업 고르기 —</option>'+ids.map(id=>'<option value="'+esc(id)+'">'+esc(bkLabel(id,BACKUPS[id]))+'</option>').join('');
+  if(BACKUPS[cur])$('bkSel').value=cur;
+  $('bkInfo').textContent=ids.length?'마지막 자동 백업: '+bkLabel(ids[0],BACKUPS[ids[0]]).replace(/ · \d+일치$/,''):(DB?'첫 백업 준비 중…':'이 기기에 매일 백업 중 (동기화 꺼짐)');
+}
+async function makeBackup(id){if(!DB)return;const data=snapshotData();BACKUPS[id]=data;renderBk();try{await DB.doc('desk/'+id).set(data);}catch(e){setSync('err',errMsg(e));}}
+async function pruneBackups(){if(!DB)return;const auto=Object.keys(BACKUPS).filter(i=>/^backup-\d{4}-\d\d-\d\d$/.test(i)).sort();const pre=Object.keys(BACKUPS).filter(i=>i.indexOf('backup-pre')===0).sort();
+  const del=auto.slice(0,Math.max(0,auto.length-14)).concat(pre.slice(0,Math.max(0,pre.length-3)));
+  for(const i of del){try{await DB.doc('desk/'+i).delete();delete BACKUPS[i];}catch(e){}}renderBk();}
+async function restoreFrom(data){
+  if(!data||!data.days){toast('백업 내용을 읽지 못했어요');return;}
+  if(DB)await makeBackup('backup-pre-'+Date.now());
+  const now=Date.now();
+  Object.keys(data.days).forEach(s=>{const v=data.days[s];DAYS[s]={checks:Object.assign({},v.checks||{}),memo:v.memo||'',wrong:v.wrong||'',vow:v.vow||'',ex:!!v.ex,updated:now};saveDay(s);});
+  if(data.prog&&data.prog.cells){PROG={cells:Object.assign({},data.prog.cells),concept:data.prog.concept||0};saveProg();}
+  lsSave();renderDay();renderProg();renderNotes();renderCal();toast('되돌렸어요 (직전 상태도 백업해 뒀어요)');
+}
+let armT=null;
+$('bkRestore').onclick=()=>{const id=$('bkSel').value;if(!id||!BACKUPS[id]){toast('먼저 백업을 골라 주세요');return;}const b=$('bkRestore');
+  if(!b.dataset.arm){b.dataset.arm='1';b.textContent='한 번 더 누르면 되돌려요';clearTimeout(armT);armT=setTimeout(()=>{delete b.dataset.arm;b.textContent='이 백업으로 되돌리기';},4000);return;}
+  delete b.dataset.arm;b.textContent='이 백업으로 되돌리기';restoreFrom(BACKUPS[id]);};
+$('bkNow').onclick=async()=>{if(!DB){lsSave();toast('이 기기에 저장했어요');return;}await makeBackup('backup-'+TODAY);toast('백업했어요');};
+$('bkFile').onclick=async()=>{const body=JSON.stringify(snapshotData(),null,1),fn='공부데스크_백업_'+TODAY+'.json';
+  if(DL){try{await DL.save({filename:fn,data:body,mimeType:'application/json'});toast('저장했어요');return;}catch(e){}}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([body],{type:'application/json'}));a.download=fn;document.body.appendChild(a);a.click();a.remove();toast('내려받기를 시작했어요');}catch(e){copy(body);}};
+$('bkUp').addEventListener('change',async e=>{const f=e.target.files&&e.target.files[0];if(!f)return;try{const o=JSON.parse(await f.text());let data=o;
+  if(o.docs){data={days:{},prog:o.docs.progress||null};Object.keys(o.docs).forEach(k=>{if(/^d\d{4}-/.test(k))data.days[k.slice(1)]=o.docs[k];});}
+  await restoreFrom(data);}catch(err){toast('파일을 읽지 못했어요');}e.target.value='';});
+renderBk();
+
+/* ───────── 동기화 연결 ───────── */
+(async function(){
+  try{ if(!window.claude||!window.claude.use){setSync('err','동기화 없이 이 기기에만 저장돼요');return;}
+    claude.use('downloads').then(d=>{if(d){DL=d;$('dlAll').hidden=false;}}).catch(()=>{});
+    const db=await claude.use('db');
+    if(!db){setSync('err','동기화 없이 이 기기에만 저장돼요 (로그인 필요)');return;}
+    DB=db;
+    let first=true;
+    db.collection('desk').onSnapshot(snap=>{
+      const localOnly={...DAYS};
+      snap.docs.forEach(doc=>{
+        const v=doc.data(); if(!v)return;
+        if(doc.id.indexOf('backup-')===0){BACKUPS[doc.id]=v;return;}
+        if(doc.id==='progress'){ if(!PROG.updated||(v.updated||0)>=(PROG.updated||0)){PROG={cells:Object.assign({},v.cells||{}),concept:v.concept||0,updated:v.updated||0};} return; }
+        if(v.date){ const cur=DAYS[v.date]; delete localOnly[v.date];
+          if(!cur||(v.updated||0)>=(cur.updated||0)){ DAYS[v.date]={checks:Object.assign({},v.checks||{}),memo:v.memo||'',wrong:v.wrong||'',vow:v.vow||'',ex:!!v.ex,updated:v.updated||0}; } }
+      });
+      if(first){ first=false;
+        // 이 기기에만 있던 기록은 올려 둔다
+        Object.keys(localOnly).forEach(s=>{const d=localOnly[s];if(d&&((d.memo||'').trim()||(d.wrong||'').trim()||(d.vow||'').trim()||d.ex||Object.keys(d.checks||{}).length))saveDay(s);});
+        if(!snap.docs.some(d=>d.id==='progress')&&Object.keys(PROG.cells||{}).length)saveProg();
+        if(!BACKUPS['backup-'+TODAY])makeBackup('backup-'+TODAY).then(pruneBackups);else pruneBackups();
+      }
+      lsSave(); renderDay(); renderProg(); renderNotes(); renderCal(); renderBk();
+      setSync('on','모든 기기 동기화 켜짐');
+    },err=>{setSync('err',errMsg(err));});
+  }catch(e){setSync('err','동기화 없이 이 기기에만 저장돼요');}
+})();
+})();
+</script>
+</body>
+</html>
