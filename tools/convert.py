@@ -42,7 +42,16 @@ def blocks(lines, pat):
     return res
 def all_blocks(lines, pat):
     idx = [(i, int(m.group(1))) for i, l in enumerate(lines) for m in [re.match(pat, l)] if m]
-    return [(n, lines[i:(idx[k+1][0] if k + 1 < len(idx) else len(lines))]) for k, (i, n) in enumerate(idx)]
+    out = [(n, lines[i:(idx[k+1][0] if k + 1 < len(idx) else len(lines))]) for k, (i, n) in enumerate(idx)]
+    nums = {n for n, _ in out}; res = []
+    for n, bl in out:
+        cut = None
+        for j in range(1, len(bl)):
+            if re.match(r'^\s*\[[^\]]*(한의학|생리학|생물|한자)', bl[j]) and any('①' in x for x in bl[:j]) and (n + 1) not in nums:
+                cut = j; break
+        if cut: res += [(n, bl[:cut]), (n + 1, [str(n + 1) + ' ' + bl[cut]] + bl[cut + 1:])]; nums.add(n + 1)
+        else: res.append((n, bl))
+    return res
 NORM = lambda s: re.sub(r'[\s\W_①-⑥]', '', re.sub(r'<[^>]+>', '', s))
 def grams(s): return {s[i:i+2] for i in range(len(s) - 1)}
 def score(concept, body):
@@ -131,7 +140,7 @@ def pair_choices(ans, letters, seed):
     if len(outs) < 3: return None
     ch = outs + [right]; rnd.shuffle(ch)
     return ch, ch.index(right) + 1
-stats = {}; sets = []
+stats = {}; sets = []; FIXES = []
 for f in sorted(glob.glob(os.path.join(TXT, '*.txt'))):
     day = re.search(r'(\d{4}-\d\d-\d\d)', f).group(1)
     r = rec.get(day)
@@ -165,6 +174,7 @@ for f in sorted(glob.glob(os.path.join(TXT, '*.txt'))):
         same = [(score(con, ' '.join(bl)), bn, bl) for bn, bl in AB if bn == n]
         other = max([(score(con, ' '.join(bl)), bn, bl) for bn, bl in AB if bn != n] or [(0, 0, [])], key=lambda t: t[0])
         sb = max(same, key=lambda t: t[0]) if same else None
+        if sb and other[1] in items_rec and other[1] != n and (score(items_rec[other[1]].get('개념', ''), ' '.join(other[2])) >= 0.5 or other[0] - sb[0] < 0.5): other = (0, 0, [])
         if sb and (sb[0] >= 0.6 or (len(same) == 1 and not (other[0] >= 0.75 and other[0] - sb[0] > 0.4))):
             best = sb
         elif other[0] >= 0.6:
@@ -178,7 +188,9 @@ for f in sorted(glob.glob(os.path.join(TXT, '*.txt'))):
         ta = TABLE.get(matched_n)
         if ta:
             ra = norm_pair(ans) if PAIR.findall(ans) else (ans.strip()[:1] if ans else '')
-            if ra and ra != ta.rstrip('*'): st['fix'] = st.get('fix', 0) + 1
+            if ra and ra != ta.rstrip('*'):
+                st['fix'] = st.get('fix', 0) + 1
+                FIXES.append({'날짜': day, '문항번호': x.get('문항번호'), 'PDF번호': matched_n, '기존정답': ans, '바른정답': ta.rstrip('*'), '_body': raw})
             ans = ta
         else: st['notab'] = st.get('notab', 0) + 1
         raw = [l for l in raw if not JUNK.match(l.strip())]
@@ -228,6 +240,15 @@ for f in sorted(glob.glob(os.path.join(TXT, '*.txt'))):
     m, d = int(day[5:7]), int(day[8:])
     sets.append({'id': 'past-' + day, 'day': day, 'title': '%d/%d 복습문제 · %d문항' % (m, d, len(out)), 'subj': 'mix', 'blank': bl, 'items': out,
                  'note': '지난 복습문제 PDF(%s)를 객관식으로 옮긴 것. 짝 맞추기는 올바른 조합 고르기로 바꿨고, 빈칸 문제는 주관식(정답 보고 스스로 채점)으로 남겼어요.' % r.get('파일', '')})
+for fx in FIXES:
+    body = smart_join([l for l in fx.pop('_body') if not JUNK.match(l.strip())])
+    fx['문제'] = clean_q(re.split(r'[①-⑥]', body)[0])[:70]
+    m = re.match(r'^([①-⑥])', fx['바른정답'])
+    if m:
+        parts = re.split(r'([①-⑥])', body)
+        for i in range(1, len(parts) - 1, 2):
+            if parts[i] == m.group(1): fx['바른답내용'] = parts[i + 1].strip()[:40]; break
+json.dump({'설명': 'PDF 빠른 정답표와 다른 _출제기록.json 정답 목록 (보기를 섞은 뒤 기록이 갱신되지 않은 것으로 보임). PDF 정답표 기준이 맞음을 내용으로 확인함. 문항번호 = _출제기록의 번호, PDF번호 = PDF 문제지 번호.', '수정': FIXES}, open(os.path.join(os.path.dirname(OUT) or '.', 'fixes.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 json.dump(sets, open(OUT, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
 for k, v in stats.items(): print(k, v)
 print('sets', len(sets), 'items', sum(len(s['items']) for s in sets), 'bytes', os.path.getsize(OUT))

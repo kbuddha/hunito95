@@ -181,6 +181,7 @@ header.top{align-items:flex-start}
 @media (prefers-reduced-motion:no-preference){.toast{transition:opacity .2s}.cell,.btn,.panel,.site,nav.tabs a{transition:background .2s,border-color .2s,box-shadow .2s,color .2s}.site:hover{box-shadow:0 2px 4px rgba(80,52,25,.08),0 12px 28px rgba(80,52,25,.12)}}
 /* 일일 복습 */
 [hidden]{display:none!important}
+.qconlist{display:grid;gap:2px;font-size:13.5px;max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:6px 10px}.qconlist div{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:8px;padding:4px 0;border-bottom:1px dashed var(--line)}.qconlist div:last-child{border-bottom:0}.qconlist .src{color:var(--muted);font-size:12px}.qconlist b{color:var(--seal);font-variant-numeric:tabular-nums}
 .qact{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.btn.idk{font-size:12.5px;padding:5px 12px;color:var(--muted)}.btn.idk:hover{color:var(--seal);border-color:var(--seal)}
 .blist{display:grid;gap:4px}.brow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}.brow:last-child{border-bottom:0}.brow.miss span{color:var(--seal)}.brow .btn{font-size:12px;padding:4px 10px}
 .wn.stg{color:var(--warn);background:var(--accent-soft)}
@@ -290,9 +291,11 @@ header.top{align-items:flex-start}
  <div id="qListWrap" class="stack">
   <div class="panel">
     <div class="qtools"><h2 style="margin:0">일일 복습</h2>
-      <div class="seg" role="group" aria-label="과목"><button type="button" class="segb qf on" data-f="all">전체</button><button type="button" class="segb qf" data-f="mix">아침 복습</button><button type="button" class="segb qf" data-f="hanja">한자</button><button type="button" class="segb qf" data-f="bio">생물</button><button type="button" class="segb qf" data-f="han">한의학</button><button type="button" class="segb qf" data-f="toeic">토익</button></div></div>
+      <div class="seg" role="group" aria-label="과목"><button type="button" class="segb qf on" data-f="all">전체</button><button type="button" class="segb qf" data-f="han">한의학</button><button type="button" class="segb qf" data-f="phys">생리학</button><button type="button" class="segb qf" data-f="bio">생물</button><button type="button" class="segb qf" data-f="hanja">한자</button><button type="button" class="segb qf" data-f="toeic">토익</button></div></div>
     <p class="sub" style="margin:-4px 0 10px">그동안 쌓인 복습문제 · 오답 재시험을 객관식으로 여기서 바로 풀어요. 바로 채점되고, 결과는 모든 기기에 저장돼요.</p>
     <div class="qwrong banner"><span>🔁 누적 오답 (마지막에 틀린 문제) · <b id="qWrongN">없음</b></span><button class="btn pri" id="qWrongBtn" type="button">다시 풀기</button></div>
+    <div class="qwrong banner qcon" style="margin-top:8px"><span>📌 개념 리스트 후보 (2번 이상 틀림) · <b id="qConN">없음</b></span><span class="acts"><button class="btn" id="qConCopy" type="button">목록 복사</button><button class="btn pri" id="qConBtn" type="button">모아 풀기</button></span></div>
+    <details id="qConWrap" hidden><summary class="sub" style="cursor:pointer;margin:6px 0">후보 목록 보기</summary><div id="qConList" class="qconlist"></div></details>
     <div id="qList" style="margin-top:8px"></div>
   </div>
   <div class="panel">
@@ -587,7 +590,8 @@ function sprintFor(s){
   const pilBlk=(tm)=>{let d,x='마지막 15분 = 백지 + 누적테스트 (1·3·7일 전)';
     if(p&&p.t)d='운동하며 '+p.l+' · '+p.t; else if(p&&p.l==='주간테스트'){d='1주 범위 누적 테스트 · 막힌 항목은 ★';x='';} else d='운동하며 ★ 항목 순환';
     return {id:'pil',tm:tm,n:'운동 + 필수암기 '+(p?p.l:''),tag:['pil','2h · 운동 1h + 암기'],d:d,x:x,l:['pil']};};
-  const am={id:'am',tm:'07:00–07:20',n:'☀ 백지인출 + 확인',tag:['etc','순공 밖 · 20분'],d:'아침 PDF 1쪽 — 어제 오답개념을 안 보고 1~2줄씩 쓰기 → 빈 곳만 채우기'+(s<='2026-11-13'?' · 토익 P5 30문항 10분':''),x:'스프린트 동안 아침 복습문제(40분)는 선택 — 시간 없으면 건너뛰기'};
+  const am={id:'am',tm:'07:00–07:20',n:'☀ 백지인출 + 확인',tag:['etc','순공 밖 · 20분'],d:(s>='2026-11-11'?'일일 복습 맨 위 백지인출 — 어제 오답개념을 안 보고 1~2줄씩 쓰기 → 빈 곳 채우기 · 못 쓴 건 \'못 씀\' 누르기':'아침 PDF 1쪽 — 어제 오답개념을 안 보고 1~2줄씩 쓰기 → 빈 곳만 채우기')+(s<='2026-11-13'?' · 토익 P5 30문항 10분':''),x:'스프린트 동안 아침 복습문제(40분)는 선택 — 시간 없으면 건너뛰기'};
+  const amQuiz={id:'odapAM',tm:'07:20–08:00',n:'아침 복습문제 (선택)',tag:['etc','순공 밖 · 40분'],d:'공부 데스크 일일 복습에서 풀기 — 보기 누르면 바로 채점, 모르면 🤷 · 결과는 다음 날 1·3·7에 자동 반영',x:'찍어서 맞힌 것도 오답 (찍었어요 체크) · 새 진도 금지'};
   const pm=(tm,bed)=>({id:'odapPM',tm:tm,n:'🌙 하루 마무리 정리',tag:['etc','순공 밖 · 20분'],d:'오늘 헷갈린 것·핵심만 1장 (= 내일 아침 백지 목록)',x:'20분에서 끊기 · 취침 '+bed});
   /* v7.1: 11/9 생리 완강일 */
   if(s==='2026-11-09'){
@@ -603,7 +607,7 @@ function sprintFor(s){
   /* 생리 3일 */
   if(SP_PHYS[s]){
     const c=SP_PHYS[s];
-    out.push(am);
+    out.push(am);if(s>='2026-11-11')out.push(amQuiz);
     out.push({id:'P1',tm:'07:20–11:50',n:'① 생리학',tag:['han','4h'],d:c[0],x:'1시간 + 10분 휴식',l:['hsum']});
     out.push({rest:1,tm:'11:50–12:35',n:'점심 · 쉬기'});
     out.push(pilBlk('12:35–14:35'));
@@ -620,7 +624,7 @@ function sprintFor(s){
   }
   /* 11/14 토익 준비일 */
   if(s==='2026-11-14'){
-    out.push(am);
+    out.push(am);if(s>='2026-11-11')out.push(amQuiz);
     out.push({id:'T1',tm:'08:00–12:00',n:'토익 준비',tag:['etc','4h'],d:'실전 감각 — RC 시간 재고 풀기 · P5 오답 자료',x:'새 문제는 오늘까지만'});
     out.push({rest:1,tm:'12:00–12:45',n:'점심 · 쉬기'});
     out.push(pilBlk('12:45–14:45'));
@@ -648,7 +652,7 @@ function sprintFor(s){
     out.push(pm('23:15–23:35','23:45'));
     return {kind:'sprintToeicDay',rows:out};
   }
-  out.push(am);
+  out.push(am);if(s>='2026-11-11')out.push(amQuiz);
   if(s==='2026-11-19'){
     out.push({id:'L1',tm:'07:20–11:50',n:'① 생물 강의 마지막 1강 (버퍼)',tag:['bio','4h'],d:'남은 회분 전부 → 생물 강의 완강',x:'남은 게 없으면 워크북 남은 단원'});
     out.push({rest:1,tm:'11:50–12:35',n:'점심 · 쉬기'});
@@ -700,10 +704,10 @@ function blocksFor(s){
     return {kind:'sun',rows:out};
   }
   const pm=pilsuMin(s);
-  const am={id:'am',tm:'07:00–07:20',n:'☀ 백지인출 + 확인',tag:['etc','순공 밖 · 20분'],d:'아침 PDF 1쪽 — 어제 오답개념(B번호)을 안 보고 핵심 1~2줄씩 쓰기 10분 → 오답노트·해설·학습지로 빈 곳만 채우기 10분'+(between(s,'2026-11-02','2026-11-14')||between(s,'2026-11-16','2026-11-23')?' · 토익 P5 30문항 10분 → 오답만 (20분'+(s>'2026-11-15'?' · 피곤하면 10분 · 11/24 성적 보고 계속/중단':'')+')':''),x:'못 쓴 B번호는 적어 두기 · ⚠️ 마법 목록부터'};
+  const am={id:'am',tm:'07:00–07:20',n:'☀ 백지인출 + 확인',tag:['etc','순공 밖 · 20분'],d:(s>='2026-11-11'?'일일 복습 맨 위 백지인출 — 어제 오답개념(B번호)을 안 보고 핵심 1~2줄씩 쓰기 10분 → 해설·오답노트로 빈 곳만 채우기 10분 · 못 쓴 건 \'못 씀\' 누르기':'아침 PDF 1쪽 — 어제 오답개념(B번호)을 안 보고 핵심 1~2줄씩 쓰기 10분 → 오답노트·해설·학습지로 빈 곳만 채우기 10분')+(between(s,'2026-11-02','2026-11-14')||between(s,'2026-11-16','2026-11-23')?' · 토익 P5 30문항 10분 → 오답만 (20분'+(s>'2026-11-15'?' · 피곤하면 10분 · 11/24 성적 보고 계속/중단':'')+')':''),x:(s>='2026-11-11'?'⚠️ 마법 목록부터':'못 쓴 B번호는 적어 두기 · ⚠️ 마법 목록부터')};
   if(prevMock)am.x='오늘 첫 30분 = 어제 '+prevMock.split(' ')[0]+' 오답';
   out.push(am);
-  out.push({id:'odapAM',tm:'07:20–08:00',n:'아침 복습문제',tag:['etc','순공 밖 · 40분'],d:'복습문제 30분 → 채점 → 틀린 번호 + "백지 못 씀: B○" 함께 보내기',x:'찍어서 맞힌 것도 오답 · 새 진도 금지'});
+  out.push({id:'odapAM',tm:'07:20–08:00',n:'아침 복습문제',tag:['etc','순공 밖 · 40분'],d:s>='2026-11-11'?'공부 데스크 일일 복습에서 30분 — 보기 누르면 바로 채점, 모르면 🤷 · 결과는 다음 날 1·3·7에 자동 반영 (보낼 필요 없음)':'복습문제 30분 → 채점 → 틀린 번호 + "백지 못 씀: B○" 함께 보내기',x:'찍어서 맞힌 것도 오답 · 새 진도 금지'});
   let t=8*60; const blk=270;
   const A=bioA(s,w);
   out.push({id:'A',tm:hm(t)+'–'+hm(t+blk),n:'① 생물 A',tag:['bio','4h · 인풋, 머리 맑을 때'],d:A.d,x:A.x}); t+=blk;
@@ -933,7 +937,7 @@ $('tStart').onclick=()=>{if(tState.run){tState.run=false;clearInterval(tI);tick(
 $('tReset').onclick=()=>{clearInterval(tI);tState={ph:'study',left:3600,run:false,end:0};tDraw();};
 
 /* ───────── 일일 복습 (문제 세트 · 모든 기기 동기화) ───────── */
-const SUBJ={mix:['pil','아침 복습'],hanja:['han','한자'],bio:['bio','생물'],han:['han','한의학'],toeic:['etc','토익'],etc:['etc','기타']};
+const SUBJ={mix:['pil','아침 복습'],phys:['han','생리학'],hanja:['han','한자'],bio:['bio','생물'],han:['han','한의학'],toeic:['etc','토익'],etc:['etc','기타']};
 const LSQ='sung-desk-quiz';
 let QZ={}; const QPEND=new Set();
 try{QZ=JSON.parse(localStorage.getItem(LSQ)||'{}')||{};}catch(e){QZ={};}
@@ -975,7 +979,7 @@ function parseInput(t){
   const o=JSON.parse(t);return Array.isArray(o)?o:[o];
 }
 function newId(s){const base=(s.day+'-'+s.subj).replace(/[^\w-]/g,'');let id;do{id=base+'-'+Math.random().toString(36).slice(2,6);}while(QZ[id]);return id;}
-function qStats(q){const its=q.items||[];let ans=0,ok=0;its.forEach(it=>{const r=(q.res||{})[it.id];if(r){ans++;if(r.ok)ok++;}});return {tot:its.length,ans,ok};}
+function qStats(q,f){const its=(q.items||[]).filter(it=>!f||f(it));let ans=0,ok=0;its.forEach(it=>{const r=(q.res||{})[it.id];if(r){ans++;if(r.ok)ok++;}});return {tot:its.length,ans,ok};}
 /* 보기 섞기: 다시 풀 때(att>0)만, 문항·회차별로 고정 */
 function perm(n,seed){const a=[...Array(n).keys()];let x=seed>>>0||1;for(let i=n-1;i>0;i--){x=(x*1103515245+12345)>>>0;const j=x%(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;}
 function hashS(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
@@ -983,13 +987,23 @@ function order(q,it){return q.att>0?perm(it.ch.length,hashS(it.id+'#'+q.att)):[.
 
 let CUR=null; // {sid} 또는 {wrong:true,list:[[sid,iid],...]}
 let QFILT='all';
-function wrongPool(){const L=[];Object.keys(QZ).sort().forEach(sid=>{const q=QZ[sid];(q.items||[]).forEach(it=>{const r=(q.res||{})[it.id];if(r?!r.ok:((q.wkeep||{})[it.id]>0))L.push([sid,it.id]);});});return L;}
+function itemSubj(q,it){if(q.subj&&q.subj!=='mix')return q.subj;const t=(it.tag||'')+' '+(it.src||'');return /생리/.test(t)?'phys':/생물/.test(t)?'bio':/한의/.test(t)?'han':/한자/.test(t)?'hanja':/토익/.test(t)?'toeic':'etc';}
+const matchF=(q,it)=>QFILT==='all'||itemSubj(q,it)===QFILT;
+function wrongPool(){const L=[];Object.keys(QZ).sort().forEach(sid=>{const q=QZ[sid];(q.items||[]).forEach(it=>{if(!matchF(q,it))return;const r=(q.res||{})[it.id];if(r?!r.ok:((q.wkeep||{})[it.id]>0))L.push([sid,it.id]);});});return L;}
+const wOf=(q,it)=>{const r=(q.res||{})[it.id];return r?(r.w||0):((q.wkeep||{})[it.id]||0);};
+function conceptGroups(){const G={};Object.keys(QZ).sort().forEach(sid=>{const q=QZ[sid];(q.items||[]).forEach(it=>{if(!matchF(q,it))return;const w=wOf(q,it);if(w<1)return;const k=(it.concept||it.q).replace(/\s+/g,' ').trim().slice(0,60);const g=G[k]||(G[k]={k,subj:itemSubj(q,it),w:0,items:[],last:''});g.w+=w;g.items.push([sid,it.id]);if((q.day||'')>g.last)g.last=q.day||'';});});
+  return Object.values(G).filter(g=>g.w>=2).sort((a,b)=>b.w-a.w||b.last.localeCompare(a.last));}
+function renderConcepts(){const gs=conceptGroups();$('qConN').textContent=gs.length?gs.length+'개':'없음';$('qConBtn').disabled=!gs.length;$('qConCopy').disabled=!gs.length;$('qConWrap').hidden=!gs.length;
+  $('qConList').innerHTML=gs.map(g=>'<div><span class="src">'+esc((SUBJ[g.subj]||SUBJ.etc)[1])+'</span><span>'+esc(g.k)+'</span><b>×'+g.w+'</b></div>').join('');}
+$('qConBtn').onclick=()=>{location.hash='#quiz/~concept';};
+$('qConCopy').onclick=()=>{const gs=conceptGroups();copy('개념 리스트 후보 '+gs.length+'개 ('+md(TODAY)+')\n'+gs.map(g=>'- ['+(SUBJ[g.subj]||SUBJ.etc)[1]+'] '+g.k+' ×'+g.w).join('\n'));};
 function renderQuizList(){
-  const ids=Object.keys(QZ).filter(id=>QFILT==='all'||QZ[id].subj===QFILT).sort((a,b)=>(QZ[b].day||'').localeCompare(QZ[a].day||'')||(QZ[b].created||0)-(QZ[a].created||0));
+  renderConcepts();
+  const ids=Object.keys(QZ).filter(id=>QFILT==='all'||(QZ[id].items||[]).some(it=>matchF(QZ[id],it))).sort((a,b)=>(QZ[b].day||'').localeCompare(QZ[a].day||'')||(QZ[b].created||0)-(QZ[a].created||0));
   const wp=wrongPool();
-  $('qWrongN').textContent=wp.length?wp.length+'문제':'없음';
+  $('qWrongN').textContent=(QFILT!=='all'?(SUBJ[QFILT]||SUBJ.etc)[1]+' ':'')+(wp.length?wp.length+'문제':'없음');
   $('qWrongBtn').disabled=!wp.length;
-  $('qList').innerHTML=ids.length?ids.map(id=>{const q=QZ[id],st=qStats(q),sj=SUBJ[q.subj]||SUBJ.etc;
+  $('qList').innerHTML=ids.length?ids.map(id=>{const q=QZ[id],st=qStats(q,QFILT==='all'?null:it=>matchF(q,it)),sj=SUBJ[q.subj]||SUBJ.etc;
     const badge=st.ans===0?'<span class="qb">안 풂</span>':st.ans<st.tot?'<span class="qb mid">'+st.ans+'/'+st.tot+' 푸는 중</span>':'<span class="qb '+(st.ok===st.tot?'full':'done')+'">'+st.ok+' / '+st.tot+'</span>';
     return '<a class="qrow" href="#quiz/'+encodeURIComponent(id)+'"><span class="when">'+mdw(q.day)+'</span><span><span class="tag '+sj[0]+'">'+sj[1]+'</span> '+esc(q.title)+(q.hist&&q.hist.length?'<small> · '+q.hist.length+'번 품</small>':'')+'</span>'+badge+'</a>';
   }).join(''):'<p class="empty">'+(QFILT==='all'?'아직 문제 세트가 없어요. 아래 \'문제 넣기\'에 붙여 넣거나, 예시 세트로 먼저 써 보세요.':'이 과목 세트가 없어요.')+'</p>';
@@ -1020,11 +1034,11 @@ function itemHtml(sid,it,n){
 function renderPlay(){
   const list=playItems();
   if(!CUR||(!CUR.wrong&&!QZ[CUR.sid])){location.hash='#quiz';return;}
-  const title=CUR.wrong?'누적 오답 다시 풀기':QZ[CUR.sid].title;
+  const title=CUR.kind==='concept'?'개념 리스트 후보 모아 풀기':CUR.wrong?'누적 오답 다시 풀기':QZ[CUR.sid].title;
   let ans=0,ok=0;const wrongs=[],guess=[],idk=[];
   list.forEach(({sid,it},k)=>{const r=(QZ[sid].res||{})[it.id];if(r){ans++;if(r.ok)ok++;else wrongs.push(k+1);if(r.g)guess.push(k+1);if(r.u)idk.push(k+1);}});
   const q=CUR.wrong?null:QZ[CUR.sid],all=ans===list.length&&list.length>0;
-  $('qPlayHead').innerHTML='<h2>'+esc(title)+'</h2><div class="sub">'+(q?mdw(q.day)+' · '+(SUBJ[q.subj]||SUBJ.etc)[1]+' · ':'')+(CUR.only?'틀린 것만 · ':'')+list.length+'문제'+(q&&q.att>0?' · '+(q.att+1)+'번째 (보기 순서 섞음)':'')+'</div>';
+  $('qPlayHead').innerHTML='<h2>'+esc(title)+'</h2><div class="sub">'+(q?mdw(q.day)+' · '+(SUBJ[q.subj]||SUBJ.etc)[1]+' · ':'')+(CUR.only?(CUR.flabel&&CUR.only===CUR.fonly?CUR.flabel+'만 · ':'틀린 것만 · '):'')+(CUR.wrong&&QFILT!=='all'&&CUR.kind==='wrong'?(SUBJ[QFILT]||SUBJ.etc)[1]+' · ':'')+list.length+'문제'+(q&&q.att>0?' · '+(q.att+1)+'번째 (보기 순서 섞음)':'')+'</div>';
   $('qMeter').innerHTML='<span>푼 문제 '+ans+' / '+list.length+' · 맞음 '+ok+'</span><div class="bar"><i style="width:'+(list.length?Math.round(ans/list.length*100):0)+'%"></i></div>';
   const bl=q&&!CUR.only&&Array.isArray(q.blank)?normBlank(q.blank):[];
   $('qBlank').hidden=!bl.length;
@@ -1070,10 +1084,10 @@ function retry(onlyWrong){
   if(CUR.wrong)CUR.list=pairs;
   const t=resetItems(pairs);CUR.show={};t.forEach(s=>qSave(s));renderPlay();renderQuizList();window.scrollTo(0,$('v-quiz').offsetTop);
 }
-$('qRetryAll').onclick=()=>{if(!CUR.wrong)CUR.only=null;retry(false);};
+$('qRetryAll').onclick=()=>{if(!CUR.wrong)CUR.only=CUR.fonly||null;retry(false);};
 $('qRetryWrong').onclick=()=>retry(true);
 function resultText(){
-  const list=playItems();const title=CUR.wrong?'누적 오답':QZ[CUR.sid].title,d=CUR.wrong?TODAY:QZ[CUR.sid].day;
+  const list=playItems();const title=CUR.kind==='concept'?'개념 리스트 후보':CUR.wrong?'누적 오답':QZ[CUR.sid].title+(CUR.flabel&&CUR.only===CUR.fonly?' ('+CUR.flabel+'만)':''),d=CUR.wrong?TODAY:QZ[CUR.sid].day;
   let ok=0;const w=[],g=[];
   list.forEach(({sid,it},k)=>{const r=(QZ[sid].res||{})[it.id];if(r&&r.ok)ok++;else if(r){const lab=(k+1)+'번'+(it.src?'('+it.src+')':'');w.push(lab+(r.u?' 모름':r.g?' 찍음':''));}});
   const bm=CUR.wrong?[]:Object.keys(QZ[CUR.sid].blankMiss||{});
@@ -1102,8 +1116,9 @@ $('qSample').onclick=()=>{$('qIn').value=JSON.stringify({day:TODAY,title:'예시
 document.querySelectorAll('.qf').forEach(b=>b.onclick=()=>{QFILT=b.dataset.f;document.querySelectorAll('.qf').forEach(x=>x.classList.toggle('on',x===b));renderQuizList();});
 function openQuiz(arg){
   if(!arg){CUR=null;$('qListWrap').hidden=false;$('qPlay').hidden=true;renderQuizList();return;}
-  if(arg==='~wrong'){if(!CUR||!CUR.wrong)CUR={wrong:true,list:wrongPool()};}
-  else{const id=decodeURIComponent(arg);if(!QZ[id]){CUR=null;$('qListWrap').hidden=false;$('qPlay').hidden=true;renderQuizList();return;}if(!CUR||CUR.sid!==id)CUR={sid:id,only:null};}
+  if(arg==='~wrong'){if(!CUR||!CUR.wrong||CUR.kind!=='wrong')CUR={wrong:true,kind:'wrong',list:wrongPool()};}
+  else if(arg==='~concept'){if(!CUR||CUR.kind!=='concept'){const L=[];conceptGroups().forEach(g=>L.push(...g.items));CUR={wrong:true,kind:'concept',list:L};}}
+  else{const id=decodeURIComponent(arg);if(!QZ[id]){CUR=null;$('qListWrap').hidden=false;$('qPlay').hidden=true;renderQuizList();return;}if(!CUR||CUR.sid!==id){const q=QZ[id];const fo=QFILT==='all'?null:q.items.filter(it=>matchF(q,it)).map(it=>it.id);CUR={sid:id,only:fo&&fo.length<q.items.length?fo:null,fonly:null,flabel:null};if(CUR.only){CUR.fonly=CUR.only;CUR.flabel=(SUBJ[QFILT]||SUBJ.etc)[1];}}}
   $('qListWrap').hidden=true;$('qPlay').hidden=false;renderPlay();
 }
 function quizChips(s){const ids=Object.keys(QZ).filter(id=>QZ[id].day===s);if(!ids.length)return '';
@@ -1136,14 +1151,15 @@ setSync('','이 기기에 저장 중 · 동기화 연결 중…');
 /* ───────── 백업 ───────── */
 let BACKUPS={}; // id -> data
 function liveDays(){const o={};Object.keys(DAYS).forEach(s=>{const d=DAYS[s];if(d&&((d.memo||'').trim()||(d.wrong||'').trim()||(d.vow||'').trim()||d.ex||Object.keys(d.checks||{}).length))o[s]=d;});return o;}
-function snapshotData(){return {kind:'backup',at:Date.now(),days:JSON.parse(JSON.stringify(liveDays())),prog:JSON.parse(JSON.stringify(PROG||{}))};}
-function bkLabel(id,v){const t=new Date(v.at||0);return (id.indexOf('backup-pre')===0?'되돌리기 직전 · ':'')+(t.getMonth()+1)+'/'+t.getDate()+' '+pad(t.getHours())+':'+pad(t.getMinutes())+' · '+Object.keys(v.days||{}).length+'일치';}
+function quizResSnap(){const o={};Object.keys(QZ).forEach(id=>{const q=QZ[id];if(untouched(q))return;const r={res:q.res||{},blankMiss:q.blankMiss||{},hist:q.hist||[],att:q.att||0,wkeep:q.wkeep||{},day:q.day,title:q.title};if(Object.keys(r.res).length||Object.keys(r.blankMiss).length||r.hist.length)o[id]=r;});return JSON.parse(JSON.stringify(o));}
+function snapshotData(){return {kind:'backup',at:Date.now(),days:JSON.parse(JSON.stringify(liveDays())),prog:JSON.parse(JSON.stringify(PROG||{})),quizRes:quizResSnap()};}
+function bkLabel(id,v){const t=new Date(v.at||0);const nq=Object.keys(v.quizRes||{}).length;return (id.indexOf('backup-pre')===0?'되돌리기 직전 · ':'')+(t.getMonth()+1)+'/'+t.getDate()+' '+pad(t.getHours())+':'+pad(t.getMinutes())+' · '+Object.keys(v.days||{}).length+'일치'+(nq?' · 복습 '+nq+'세트':'');}
 function renderBk(){
   const ids=Object.keys(BACKUPS).sort((a,b)=>(BACKUPS[b].at||0)-(BACKUPS[a].at||0));
   const cur=$('bkSel').value;
   $('bkSel').innerHTML='<option value="">— 백업 고르기 —</option>'+ids.map(id=>'<option value="'+esc(id)+'">'+esc(bkLabel(id,BACKUPS[id]))+'</option>').join('');
   if(BACKUPS[cur])$('bkSel').value=cur;
-  $('bkInfo').textContent=ids.length?'마지막 자동 백업: '+bkLabel(ids[0],BACKUPS[ids[0]]).replace(/ · \d+일치$/,''):(DB?'첫 백업 준비 중…':'이 기기에 매일 백업 중 (동기화 꺼짐)');
+  $('bkInfo').textContent=ids.length?'마지막 자동 백업: '+bkLabel(ids[0],BACKUPS[ids[0]]).replace(/ · \d+일치.*$/,''):(DB?'첫 백업 준비 중…':'이 기기에 매일 백업 중 (동기화 꺼짐)');
 }
 async function makeBackup(id){if(!DB)return;const data=snapshotData();BACKUPS[id]=data;renderBk();try{await DB.doc('desk/'+id).set(data);}catch(e){setSync('err',errMsg(e));}}
 async function pruneBackups(){if(!DB)return;const auto=Object.keys(BACKUPS).filter(i=>/^backup-\d{4}-\d\d-\d\d$/.test(i)).sort();const pre=Object.keys(BACKUPS).filter(i=>i.indexOf('backup-pre')===0).sort();
@@ -1155,6 +1171,8 @@ async function restoreFrom(data){
   const now=Date.now();
   Object.keys(data.days).forEach(s=>{const v=data.days[s];DAYS[s]={checks:Object.assign({},v.checks||{}),memo:v.memo||'',wrong:v.wrong||'',vow:v.vow||'',ex:!!v.ex,updated:now};saveDay(s);});
   if(data.prog&&data.prog.cells){PROG={cells:Object.assign({},data.prog.cells),concept:data.prog.concept||0};saveProg();}
+  if(data.quizRes)Object.keys(data.quizRes).forEach(id=>{if(!QZ[id]&&BUNDLE){applyBundle();}const q=QZ[id],v=data.quizRes[id];if(!q||!v)return;q.res=Object.assign({},v.res||{});q.blankMiss=Object.assign({},v.blankMiss||{});q.hist=(v.hist||[]).slice();q.att=v.att||0;q.wkeep=Object.assign({},v.wkeep||{});qSave(id);});
+  if(typeof renderQuizList==='function'){renderQuizList();if(CUR&&!$('qPlay').hidden)renderPlay();}
   lsSave();renderDay();renderProg();renderNotes();renderCal();toast('되돌렸어요 (직전 상태도 백업해 뒀어요)');
 }
 let armT=null;
