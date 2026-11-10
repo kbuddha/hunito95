@@ -179,7 +179,7 @@ header.top{align-items:flex-start}
 .motto small{display:block;margin-top:6px;font-size:12px;color:#e8d3b8;opacity:.85}
 @media (max-width:520px){.motto p{font-size:18px}}
 @media (prefers-reduced-motion:no-preference){.toast{transition:opacity .2s}.cell,.btn,.panel,.site,nav.tabs a{transition:background .2s,border-color .2s,box-shadow .2s,color .2s}.site:hover{box-shadow:0 2px 4px rgba(80,52,25,.08),0 12px 28px rgba(80,52,25,.12)}}
-/* 오답 풀기 */
+/* 일일 복습 */
 [hidden]{display:none!important}
 .qtools{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
 .qrow{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink);font-size:14px}
@@ -237,7 +237,7 @@ header.top{align-items:flex-start}
 
 <nav class="tabs" aria-label="화면">
   <a href="#today" data-v="today">오늘</a>
-  <a href="#quiz" data-v="quiz">오답 풀기</a>
+  <a href="#quiz" data-v="quiz">일일 복습</a>
   <a href="#study" data-v="study">공부 사이트</a>
   <a href="#plan" data-v="plan">주간 계획</a>
   <a href="#progress" data-v="progress">진도</a>
@@ -286,9 +286,9 @@ header.top{align-items:flex-start}
 <section class="view" id="v-quiz">
  <div id="qListWrap" class="stack">
   <div class="panel">
-    <div class="qtools"><h2 style="margin:0">오답 풀기</h2>
+    <div class="qtools"><h2 style="margin:0">일일 복습</h2>
       <div class="seg" role="group" aria-label="과목"><button type="button" class="segb qf on" data-f="all">전체</button><button type="button" class="segb qf" data-f="hanja">한자</button><button type="button" class="segb qf" data-f="bio">생물</button><button type="button" class="segb qf" data-f="han">한의학</button><button type="button" class="segb qf" data-f="toeic">토익</button></div></div>
-    <p class="sub" style="margin:-4px 0 10px">매일 받는 오답 재시험 · 아침 복습문제를 여기서 바로 풀어요. 바로 채점되고, 결과는 모든 기기에 저장돼요.</p>
+    <p class="sub" style="margin:-4px 0 10px">그동안 쌓인 복습문제 · 오답 재시험을 객관식으로 여기서 바로 풀어요. 바로 채점되고, 결과는 모든 기기에 저장돼요.</p>
     <div class="qwrong banner"><span>🔁 누적 오답 (마지막에 틀린 문제) · <b id="qWrongN">없음</b></span><button class="btn pri" id="qWrongBtn" type="button">다시 풀기</button></div>
     <div id="qList" style="margin-top:8px"></div>
   </div>
@@ -928,7 +928,7 @@ function tick(){tState.left=Math.max(0,Math.round((tState.end-Date.now())/1000))
 $('tStart').onclick=()=>{if(tState.run){tState.run=false;clearInterval(tI);tick();tState.run=false;}else{tState.run=true;tState.end=Date.now()+tState.left*1000;tI=setInterval(tick,1000);}tDraw();};
 $('tReset').onclick=()=>{clearInterval(tI);tState={ph:'study',left:3600,run:false,end:0};tDraw();};
 
-/* ───────── 오답 풀기 (문제 세트 · 모든 기기 동기화) ───────── */
+/* ───────── 일일 복습 (문제 세트 · 모든 기기 동기화) ───────── */
 const SUBJ={hanja:['han','한자'],bio:['bio','생물'],han:['han','한의학'],toeic:['etc','토익'],etc:['etc','기타']};
 const LSQ='sung-desk-quiz';
 let QZ={}; const QPEND=new Set();
@@ -1075,7 +1075,7 @@ $('qAdd').onclick=()=>{
   made.forEach(qSave);$('qIn').value='';$('qMsg').textContent=made.length+'개 세트를 넣었어요.';renderQuizList();renderDay();
   if(made.length===1)location.hash='#quiz/'+encodeURIComponent(made[0]);
 };
-const QGUIDE='공부 데스크 \'오답 풀기\' 탭에 붙여 넣을 JSON 코드블록 하나로 만들어 줘.\n형식:\n{"day":"2026-11-10","title":"한자 DAY08 오답 재시험","subj":"hanja","items":[\n {"id":"1","src":"원12 · W1686","tag":"성어 빈칸","q":"문제 내용","ch":["보기1","보기2","보기3","보기4"],"a":2,"exp":"해설"},\n {"id":"2","tag":"주관식","q":"문제 내용","a":"정답","exp":"해설"}\n],"note":"핵심 3줄 + 💡 비유 (선택)"}\n규칙:\n- subj는 hanja / bio / han / toeic / etc 중 하나, day는 공부한 날짜\n- a = 정답 보기 번호 (1부터). 주관식이면 ch를 빼고 a에 정답을 글자로\n- 원래 문제 그대로, 보기 순서만 섞기 · src에 교재 번호(원n · W번호)\n- 문제(q)·보기에는 독음을 쓰지 않고, 해설(exp)에는 모든 한자를 한자(독음)으로\n- 교재 오류 의심 문항은 바로잡고 해설에 \'(교재 오류 의심으로 문항 변경)\' 표시';
+const QGUIDE='공부 데스크 \'일일 복습\' 탭에 붙여 넣을 JSON 코드블록 하나로 만들어 줘.\n형식:\n{"day":"2026-11-10","title":"11/10 복습문제","subj":"bio","items":[\n {"id":"1","src":"원12 · W1686","tag":"성어 빈칸","q":"문제 내용","ch":["보기1","보기2","보기3","보기4"],"a":2,"exp":"해설"},\n {"id":"2","tag":"주관식","q":"문제 내용","a":"정답","exp":"해설"}\n],"note":"핵심 3줄 + 💡 비유 (선택)"}\n규칙:\n- 복습문제는 모두 4지선다 객관식으로 (서술·빈칸·백지 문제도 보기 4개로 바꾸고, 틀린 보기는 실제로 헷갈리기 쉬운 개념으로)\n- 하루치 복습문제 파일 하나 = 세트 하나 (여러 날이면 [세트, 세트, …] 배열 하나로)\n- subj는 hanja / bio / han / toeic / etc 중 하나, day는 공부한 날짜\n- a = 정답 보기 번호 (1부터). 주관식이면 ch를 빼고 a에 정답을 글자로\n- 원래 문제 그대로, 보기 순서만 섞기 · src에 교재 번호(원n · W번호)\n- 문제(q)·보기에는 독음을 쓰지 않고, 해설(exp)에는 모든 한자를 한자(독음)으로\n- 교재 오류 의심 문항은 바로잡고 해설에 \'(교재 오류 의심으로 문항 변경)\' 표시';
 $('qGuide').onclick=()=>copy(QGUIDE);
 $('qSample').onclick=()=>{$('qIn').value=JSON.stringify({day:TODAY,title:'예시 세트 (지워도 돼요)',subj:'bio',items:[
  {id:'1',src:'예시',tag:'세포호흡',q:'해당과정(glycolysis)이 일어나는 곳은?',ch:['미토콘드리아 기질','세포질 (세포기질)','미토콘드리아 내막','엽록체 스트로마'],a:2,exp:'해당과정은 세포질에서 일어나 포도당 1분자 → 피루브산 2분자. TCA 회로는 미토콘드리아 기질, 전자전달계는 내막.'},
