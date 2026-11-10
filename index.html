@@ -181,6 +181,8 @@ header.top{align-items:flex-start}
 @media (prefers-reduced-motion:no-preference){.toast{transition:opacity .2s}.cell,.btn,.panel,.site,nav.tabs a{transition:background .2s,border-color .2s,box-shadow .2s,color .2s}.site:hover{box-shadow:0 2px 4px rgba(80,52,25,.08),0 12px 28px rgba(80,52,25,.12)}}
 /* 일일 복습 */
 [hidden]{display:none!important}
+.blist{display:grid;gap:4px}.brow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}.brow:last-child{border-bottom:0}.brow.miss span{color:var(--seal)}.brow .btn{font-size:12px;padding:4px 10px}
+.wn.stg{color:var(--warn);background:var(--accent-soft)}
 .qtools{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
 .qrow{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 4px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink);font-size:14px}
 .qrow:last-child{border-bottom:0}
@@ -287,7 +289,7 @@ header.top{align-items:flex-start}
  <div id="qListWrap" class="stack">
   <div class="panel">
     <div class="qtools"><h2 style="margin:0">일일 복습</h2>
-      <div class="seg" role="group" aria-label="과목"><button type="button" class="segb qf on" data-f="all">전체</button><button type="button" class="segb qf" data-f="hanja">한자</button><button type="button" class="segb qf" data-f="bio">생물</button><button type="button" class="segb qf" data-f="han">한의학</button><button type="button" class="segb qf" data-f="toeic">토익</button></div></div>
+      <div class="seg" role="group" aria-label="과목"><button type="button" class="segb qf on" data-f="all">전체</button><button type="button" class="segb qf" data-f="mix">아침 복습</button><button type="button" class="segb qf" data-f="hanja">한자</button><button type="button" class="segb qf" data-f="bio">생물</button><button type="button" class="segb qf" data-f="han">한의학</button><button type="button" class="segb qf" data-f="toeic">토익</button></div></div>
     <p class="sub" style="margin:-4px 0 10px">그동안 쌓인 복습문제 · 오답 재시험을 객관식으로 여기서 바로 풀어요. 바로 채점되고, 결과는 모든 기기에 저장돼요.</p>
     <div class="qwrong banner"><span>🔁 누적 오답 (마지막에 틀린 문제) · <b id="qWrongN">없음</b></span><button class="btn pri" id="qWrongBtn" type="button">다시 풀기</button></div>
     <div id="qList" style="margin-top:8px"></div>
@@ -304,6 +306,7 @@ header.top{align-items:flex-start}
     <div class="dayhead"><div id="qPlayHead"></div><a class="btn" href="#quiz">← 목록</a></div>
     <div class="meter" id="qMeter" style="margin-top:8px"></div>
   </div>
+  <div class="panel" id="qBlank" hidden></div>
   <div id="qItems" class="stack"></div>
   <div class="qdone" id="qDone" hidden>
     <div id="qDoneTxt"></div>
@@ -929,7 +932,7 @@ $('tStart').onclick=()=>{if(tState.run){tState.run=false;clearInterval(tI);tick(
 $('tReset').onclick=()=>{clearInterval(tI);tState={ph:'study',left:3600,run:false,end:0};tDraw();};
 
 /* ───────── 일일 복습 (문제 세트 · 모든 기기 동기화) ───────── */
-const SUBJ={hanja:['han','한자'],bio:['bio','생물'],han:['han','한의학'],toeic:['etc','토익'],etc:['etc','기타']};
+const SUBJ={mix:['pil','아침 복습'],hanja:['han','한자'],bio:['bio','생물'],han:['han','한의학'],toeic:['etc','토익'],etc:['etc','기타']};
 const LSQ='sung-desk-quiz';
 let QZ={}; const QPEND=new Set();
 try{QZ=JSON.parse(localStorage.getItem(LSQ)||'{}')||{};}catch(e){QZ={};}
@@ -953,12 +956,13 @@ function normSet(o){
       else if(typeof a==='string'){const c=CIRC.indexOf(a.trim());if(c>-1)ai=c;else if(/^\d+$/.test(a.trim()))ai=Number(a)-1;else ai=ch.findIndex(x=>x.trim()===a.trim());}
       if(!(ai>=0&&ai<ch.length))throw new Error((i+1)+'번 정답(a)이 보기 번호와 안 맞아요 (1부터 셉니다)');
     }else{at=String(a==null?'':a);if(!at.trim())throw new Error((i+1)+'번 주관식 정답(a)이 없어요');}
-    return {id,src:String(it.src||''),tag:String(it.tag||''),q,ch,ai,at,exp:String(it.exp||it.explain||'')};
+    return {id,src:String(it.src||''),tag:String(it.tag||''),q,ch,ai,at,exp:String(it.exp||it.explain||''),concept:String(it.concept||''),stage:String(it.stage||'')};
   });
   const day=/^\d{4}-\d\d-\d\d$/.test(o.day||'')?o.day:TODAY;
   const subj=SUBJ[o.subj]?o.subj:'etc';
-  return {day,title:String(o.title||(md(day)+' 오답')).trim(),subj,note:String(o.note||''),items,res:{},att:0,hist:[],created:Date.now()};
+  return {day,title:String(o.title||(md(day)+' 오답')).trim(),subj,note:String(o.note||''),items,blank:normBlank(o.blank),blankMiss:{},res:{},att:0,hist:[],created:Date.now()};
 }
+function normBlank(b){return Array.isArray(b)?b.map((x,i)=>typeof x==='string'?{id:'B'+(i+1),subj:'',t:x}:{id:String(x.id||'B'+(i+1)),subj:String(x.subj||''),t:String(x.t||x.text||'')}).filter(x=>x.t.trim()):[];}
 function parseInput(t){
   t=t.trim();const m=t.match(/```(?:json)?\s*([\s\S]*?)```/);if(m)t=m[1].trim();
   const o=JSON.parse(t);return Array.isArray(o)?o:[o];
@@ -992,7 +996,7 @@ function playItems(){
 function itemHtml(sid,it,n){
   const q=QZ[sid],r=(q.res||{})[it.id],sj=SUBJ[q.subj]||SUBJ.etc;
   let h='<div class="qi'+(r?(r.ok?' ok':' ng'):'')+'" data-s="'+esc(sid)+'" data-i="'+esc(it.id)+'">';
-  h+='<div class="qh"><b>'+n+'.</b>'+(it.tag?'<span class="tag '+sj[0]+'">'+esc(it.tag)+'</span>':'')+(it.src?'<span class="src">'+esc(it.src)+'</span>':'')+(CUR.wrong?'<span class="src">'+esc(q.title)+'</span>':'')+((r&&r.w)?'<span class="wn">틀림 ×'+r.w+'</span>':'')+'</div>';
+  h+='<div class="qh"><b>'+n+'.</b>'+(it.tag?'<span class="tag '+sj[0]+'">'+esc(it.tag)+'</span>':'')+(it.stage?'<span class="wn stg">'+esc(it.stage)+'</span>':'')+(it.src?'<span class="src">'+esc(it.src)+'</span>':'')+(CUR.wrong?'<span class="src">'+esc(q.title)+'</span>':'')+((r&&r.w)?'<span class="wn">틀림 ×'+r.w+'</span>':'')+'</div>';
   h+='<div class="qq">'+esc(it.q)+'</div>';
   if(it.ch){
     const ord=order(q,it);
@@ -1015,6 +1019,9 @@ function renderPlay(){
   const q=CUR.wrong?null:QZ[CUR.sid],all=ans===list.length&&list.length>0;
   $('qPlayHead').innerHTML='<h2>'+esc(title)+'</h2><div class="sub">'+(q?mdw(q.day)+' · '+(SUBJ[q.subj]||SUBJ.etc)[1]+' · ':'')+(CUR.only?'틀린 것만 · ':'')+list.length+'문제'+(q&&q.att>0?' · '+(q.att+1)+'번째 (보기 순서 섞음)':'')+'</div>';
   $('qMeter').innerHTML='<span>푼 문제 '+ans+' / '+list.length+' · 맞음 '+ok+'</span><div class="bar"><i style="width:'+(list.length?Math.round(ans/list.length*100):0)+'%"></i></div>';
+  const bl=q&&!CUR.only&&Array.isArray(q.blank)?normBlank(q.blank):[];
+  $('qBlank').hidden=!bl.length;
+  if(bl.length){const bm=q.blankMiss||{};$('qBlank').innerHTML='<h2>백지인출</h2><p class="sub" style="margin:-4px 0 10px">10분: 안 보고 핵심 1~2줄씩 떠올리기(종이에) → 10분: 오답노트·해설로 빈 곳 채우기 → 아래 문제. 못 떠올린 건 \'못 씀\'을 눌러 두면 문제를 맞혀도 오답으로 반영돼요.</p><div class="blist">'+bl.map(b=>'<div class="brow'+(bm[b.id]?' miss':'')+'"><b>'+esc(b.id)+'</b><span>'+(b.subj?'<span class="src">'+esc(b.subj)+'</span> ':'')+esc(b.t)+'</span><button type="button" class="btn'+(bm[b.id]?' ngb':'')+'" data-b="'+esc(b.id)+'" aria-pressed="'+!!bm[b.id]+'">'+(bm[b.id]?'못 씀 ✓':'못 씀')+'</button></div>').join('')+'</div>';}
   $('qItems').innerHTML=list.map(({sid,it},k)=>itemHtml(sid,it,k+1)).join('')||'<p class="empty">풀 문제가 없어요.</p>';
   $('qDone').hidden=!all;
   if(all)$('qDoneTxt').innerHTML='<b>'+ok+' / '+list.length+'</b> '+(wrongs.length?'· 틀림 '+wrongs.join(', ')+'번':'· 다 맞았어요 👏')+(guess.length?' · 찍음 '+guess.join(', ')+'번':'');
@@ -1061,10 +1068,12 @@ function resultText(){
   const list=playItems();const title=CUR.wrong?'누적 오답':QZ[CUR.sid].title,d=CUR.wrong?TODAY:QZ[CUR.sid].day;
   let ok=0;const w=[],g=[];
   list.forEach(({sid,it},k)=>{const r=(QZ[sid].res||{})[it.id];if(r&&r.ok)ok++;else if(r){const lab=(k+1)+'번'+(it.src?'('+it.src+')':'');w.push(lab+(r.g?' 찍음':''));}});
-  return md(d)+' '+title+' — '+ok+'/'+list.length+(w.length?'\n틀림: '+w.join(', '):'\n전부 맞음');
+  const bm=CUR.wrong?[]:Object.keys(QZ[CUR.sid].blankMiss||{});
+  return md(d)+' '+title+' — '+ok+'/'+list.length+(w.length?'\n틀림: '+w.join(', '):'\n전부 맞음')+(bm.length?'\n백지 못 씀: '+bm.join(', '):'');
 }
+$('qBlank').addEventListener('click',e=>{const b=e.target.closest('[data-b]');if(!b||!CUR||CUR.wrong)return;const q=QZ[CUR.sid];q.blankMiss=q.blankMiss||{};const k=b.dataset.b;if(q.blankMiss[k])delete q.blankMiss[k];else q.blankMiss[k]=true;qSave(CUR.sid);renderPlay();});
 $('qCopy').onclick=()=>copy(resultText());
-$('qToMemo').onclick=()=>{const d=day(TODAY);const line=resultText().replace('\n',' · ');d.wrong=(d.wrong||'').trim()?d.wrong.trim()+' / '+line:line;saveDay(TODAY);if(SEL===TODAY)renderDay();renderNotes();toast('오늘 정리 \'틀린 번호\'에 넣었어요');};
+$('qToMemo').onclick=()=>{const d=day(TODAY);const line=resultText().replace(/\n/g,' · ');d.wrong=(d.wrong||'').trim()?d.wrong.trim()+' / '+line:line;saveDay(TODAY);if(SEL===TODAY)renderDay();renderNotes();toast('오늘 정리 \'틀린 번호\'에 넣었어요');};
 $('qDel').onclick=()=>{const b=$('qDel');if(!b.dataset.arm){b.dataset.arm='1';b.textContent='한 번 더 누르면 지워요';setTimeout(()=>{delete b.dataset.arm;b.textContent='세트 지우기';},4000);return;}
   delete b.dataset.arm;b.textContent='세트 지우기';const id=CUR.sid;delete QZ[id];lsQ();if(DB)DB.doc('quiz/'+id).delete().catch(e=>setSync('err',errMsg(e)));location.hash='#quiz';renderQuizList();toast('지웠어요');};
 $('qWrongBtn').onclick=()=>{location.hash='#quiz/~wrong';};
@@ -1075,7 +1084,7 @@ $('qAdd').onclick=()=>{
   made.forEach(qSave);$('qIn').value='';$('qMsg').textContent=made.length+'개 세트를 넣었어요.';renderQuizList();renderDay();
   if(made.length===1)location.hash='#quiz/'+encodeURIComponent(made[0]);
 };
-const QGUIDE='공부 데스크 \'일일 복습\' 탭에 붙여 넣을 JSON 코드블록 하나로 만들어 줘.\n형식:\n{"day":"2026-11-10","title":"11/10 복습문제","subj":"bio","items":[\n {"id":"1","src":"원12 · W1686","tag":"성어 빈칸","q":"문제 내용","ch":["보기1","보기2","보기3","보기4"],"a":2,"exp":"해설"},\n {"id":"2","tag":"주관식","q":"문제 내용","a":"정답","exp":"해설"}\n],"note":"핵심 3줄 + 💡 비유 (선택)"}\n규칙:\n- 복습문제는 모두 4지선다 객관식으로 (서술·빈칸·백지 문제도 보기 4개로 바꾸고, 틀린 보기는 실제로 헷갈리기 쉬운 개념으로)\n- 하루치 복습문제 파일 하나 = 세트 하나 (여러 날이면 [세트, 세트, …] 배열 하나로)\n- subj는 hanja / bio / han / toeic / etc 중 하나, day는 공부한 날짜\n- a = 정답 보기 번호 (1부터). 주관식이면 ch를 빼고 a에 정답을 글자로\n- 원래 문제 그대로, 보기 순서만 섞기 · src에 교재 번호(원n · W번호)\n- 문제(q)·보기에는 독음을 쓰지 않고, 해설(exp)에는 모든 한자를 한자(독음)으로\n- 교재 오류 의심 문항은 바로잡고 해설에 \'(교재 오류 의심으로 문항 변경)\' 표시';
+const QGUIDE='공부 데스크 \'일일 복습\' 탭에 붙여 넣을 JSON 코드블록 하나로 만들어 줘.\n형식:\n{"day":"2026-11-10","title":"11/10 복습문제","subj":"bio","items":[\n {"id":"1","src":"원12 · W1686","tag":"성어 빈칸","q":"문제 내용","ch":["보기1","보기2","보기3","보기4"],"a":2,"exp":"해설"},\n {"id":"2","tag":"주관식","q":"문제 내용","a":"정답","exp":"해설"}\n],"note":"핵심 3줄 + 💡 비유 (선택)"}\n규칙:\n- 복습문제는 모두 4지선다 객관식으로 (서술·빈칸·백지 문제도 보기 4개로 바꾸고, 틀린 보기는 실제로 헷갈리기 쉬운 개념으로)\n- 하루치 복습문제 파일 하나 = 세트 하나 (여러 날이면 [세트, 세트, …] 배열 하나로)\n- OX 문항은 ch를 ["O","X"]로, 짝 맞추기는 맞는 짝 조합을 4지선다로\n- 아침 복습처럼 과목이 섞이면 subj는 mix, 문항마다 stage(D+1·D+3·D+7·마법·미풀이)·concept(개념 한 줄) 넣기\n- 백지인출 목록이 있으면 "blank":[{"id":"B1","subj":"생물","t":"개념 + 무엇을 떠올릴지"}]\n- subj는 mix / hanja / bio / han / toeic / etc 중 하나, day는 공부한 날짜\n- a = 정답 보기 번호 (1부터). 주관식이면 ch를 빼고 a에 정답을 글자로\n- 원래 문제 그대로, 보기 순서만 섞기 · src에 교재 번호(원n · W번호)\n- 문제(q)·보기에는 독음을 쓰지 않고, 해설(exp)에는 모든 한자를 한자(독음)으로\n- 교재 오류 의심 문항은 바로잡고 해설에 \'(교재 오류 의심으로 문항 변경)\' 표시';
 $('qGuide').onclick=()=>copy(QGUIDE);
 $('qSample').onclick=()=>{$('qIn').value=JSON.stringify({day:TODAY,title:'예시 세트 (지워도 돼요)',subj:'bio',items:[
  {id:'1',src:'예시',tag:'세포호흡',q:'해당과정(glycolysis)이 일어나는 곳은?',ch:['미토콘드리아 기질','세포질 (세포기질)','미토콘드리아 내막','엽록체 스트로마'],a:2,exp:'해당과정은 세포질에서 일어나 포도당 1분자 → 피루브산 2분자. TCA 회로는 미토콘드리아 기질, 전자전달계는 내막.'},
