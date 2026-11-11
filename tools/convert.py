@@ -25,9 +25,7 @@ def regions(text):
         if re.match(r'^\s*(짧은 )?해설\s*$', L[i]) or re.match(r'^\s*(짧은 해설|해설)\b', L[i]):
             exp_start = i + 1; break
     exp_end = len(L)
-    if exp_start:
-        for i in range(exp_start, len(L)):
-            if re.match(r'^\s*(오늘의 1·3·7|마법·반복 목록|마법 목록|핵심\s*$|💡)', L[i]): exp_end = i; break
+    if not exp_start and end < len(L): exp_start = end
     return L[:end], (L[exp_start:exp_end] if exp_start else [])
 def blocks(lines, pat):
     cands = [(i, int(m.group(1))) for i, l in enumerate(lines) for m in [re.match(pat, l)] if m]
@@ -164,6 +162,7 @@ for f in sorted(glob.glob(os.path.join(TXT, '*.txt'))):
     TABLE = parse_table(open(os.path.join(os.path.dirname(OUT) or '.', 'raw_' + os.path.basename(f)), encoding='utf-8').read().translate(RADMAP))
     AB = all_blocks(qlines, r'^\s*(\d{1,3})(?:\.\s*|\s+\[)')
     eb = blocks(elines, r'^\s*(\d{1,3})[\s.)]')
+    EB_ALL = all_blocks(elines, r'^\s*(\d{1,3})[\s.)]')
     blank = r.get('백지인출') if isinstance(r.get('백지인출'), dict) else {}
     out = []; st = {'mc': 0, 'ox': 0, 'pair': 0, 'short': 0, 'skip_hanja': 0, 'noq': 0}
     for n in sorted(items_rec):
@@ -222,12 +221,28 @@ for f in sorted(glob.glob(os.path.join(TXT, '*.txt'))):
             else: it.update(q=q, a=ans); st['short'] += 1
         else:
             it.update(q=clean_q(body), a=ans or '(정답 기록 없음)'); st['short'] += 1
-        e = eb.get(n)
-        if e and score(it['q'][:60], ' '.join(e)) < 0.08 and score(ans, ' '.join(e)) < 0.5: e = None
+        ctx = it['q'] + ' ' + ' '.join(it.get('ch') or []) + ' ' + str(it.get('a', '')) + ' ' + it['concept']
+        def _cut(e):
+            c = next((j for j, l in enumerate(e) if j > 0 and re.match(r'^\s*(오늘의 1·3·7|마법·반복 목록|마법 목록|핵심\s*$|💡|<<PAGE|450제|\d+부\b)', l)), None)
+            return e[:c] if c else e
+        def _rel(e):
+            t = re.sub(r'^\s*\d{1,3}[\s.)]\s*', '', ' '.join(e))
+            t = re.sub(r'^(정답\s*)?((\(\d\)\s*[ㄱ-ㅎ]\s*)+|[①-⑥OX]\*?)\s*', '', t)
+            body = NORM(t)
+            return len(grams(body[:160]) & grams(NORM(ctx))), len(body)
+        cands = [_cut(bl) for bn, bl in EB_ALL if bn == matched_n] or [_cut(bl) for bn, bl in EB_ALL if bn == n]
+        e = None
+        if cands:
+            best_e = max(cands, key=lambda c: _rel(c))
+            com, ln = _rel(best_e)
+            if com >= 3 and ln >= 4: e = best_e
         if e:
             ex = re.sub(r'^\s*\d{1,3}[\s.)]\s*', '', smart_join([l for l in e if not JUNK.match(l.strip())]))
             ex = re.sub(r'^정답\s*\S+(\s*\([1-9]\)\s*[ㄱ-ㅎ])*\s*(\[[^\]]*\]\s*)*[—-]?\s*', '', ex)
             ex = re.split(r'450제 해설|<<PAGE', ex)[0]
+            if 'ch' not in it and str(it.get('a', '')).startswith('(1)') and ex.startswith('(1)'):
+                it['a'] = re.split(r'\s[—-]\s', ex)[0].strip()
+            ex = re.sub(r'^(정답\s*)?((\(\d\)\s*[ㄱ-ㅎ](·[a-e])?\s*)+|[①-⑥OX]\*?)?\s*((\[[^\]]*\]|〔[^〕]*〕)\s*)*[—-]?\s*', '', ex).strip()
             it['exp'] = ex[:500]
         if 'ch' not in it and str(it['a']).startswith('(1)') and (it.get('exp') or '').startswith('(1)'):
             it['a'] = re.split(r'\s[—-]\s', it['exp'])[0].strip()
